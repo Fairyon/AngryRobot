@@ -24,7 +24,7 @@ public class CokeBot {
 		this.lightSensor = new LightSensor(Main.lightSensorPort);
 		this.canTouchSensor = new TouchSensor(Main.canTouchSensorPort);
 		this.usSensor = new CokeUltrasonic(Main.usSensorPort);
-		this.pilot = new CalibratedDifferentialPilot(56, 142 - 26, leftMotor,
+		this.pilot = new CokeDifferentialPilot(56, 142 - 26, leftMotor,
 				rightMotor);
 		curpos = new Point(0, 0);
 	}
@@ -69,13 +69,18 @@ public class CokeBot {
 	}
 
 	protected void rangecalibration() {
-		pilot.setTravelSpeed(100);
-		for (int i = 0; i < 10; i++) {
-			if (i % 2 == 0)
-				System.out.println();
-			pilot.travel(50);
-			System.out.print((int) usSensor.getDistance() + " ");
+		pilot.setRotateSpeed(100);
+		grabMotor.setSpeed(50);
+		grabMotor.rotateTo(90, true);
+		float minrange = 300, range, mindeg=0;
+		while(grabMotor.isMoving()){
+	    if((range=usSensor.getRange())<minrange){
+	      minrange=range;
+	      mindeg=grabMotor.getTachoCount();
+	    }
 		}
+    pilot.rotate(mindeg);
+    grabMotor.lookAhead();
 	}
 
 	protected Point lookForCan() {

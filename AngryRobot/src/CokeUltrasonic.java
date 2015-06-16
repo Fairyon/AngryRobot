@@ -1,5 +1,6 @@
 import lejos.nxt.SensorPort;
 import lejos.nxt.UltrasonicSensor;
+import lejos.robotics.RangeFinder;
 
 public class CokeUltrasonic extends UltrasonicSensor{
   
