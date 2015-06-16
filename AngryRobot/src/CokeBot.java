@@ -3,9 +3,9 @@ import java.awt.Point;
 import lejos.nxt.LightSensor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.TouchSensor;
-import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.navigation.DifferentialPilot;
+
 public class CokeBot {
 
 	private final DifferentialPilot pilot;
@@ -15,7 +15,9 @@ public class CokeBot {
 	protected final LightSensor lightSensor;
 	protected final TouchSensor canTouchSensor;
 	protected final CokeUltrasonic usSensor;
+
 	protected Point curpos;
+	protected float angle;
 
 	public CokeBot() {
 		this.leftMotor = new NXTRegulatedMotor(Main.leftMotorPort);
@@ -72,15 +74,15 @@ public class CokeBot {
 		pilot.setRotateSpeed(100);
 		grabMotor.setSpeed(50);
 		grabMotor.rotateTo(90, true);
-		float minrange = 300, range, mindeg=0;
-		while(grabMotor.isMoving()){
-	    if((range=usSensor.getRange())<minrange){
-	      minrange=range;
-	      mindeg=grabMotor.getTachoCount();
-	    }
+		float minrange = 300, range, mindeg = 0;
+		while (grabMotor.isMoving()) {
+			if ((range = usSensor.getRange()) < minrange) {
+				minrange = range;
+				mindeg = grabMotor.getTachoCount();
+			}
 		}
-    pilot.rotate(mindeg);
-    grabMotor.lookAhead();
+		pilot.rotate(mindeg);
+		grabMotor.lookAhead();
 	}
 
 	protected Point lookForCan() {
@@ -88,8 +90,33 @@ public class CokeBot {
 		return new Point();
 	}
 
+	public void travelToCan() {
+
+	}
+
 	protected void getCan() {
 
 	}
 
+	public void adjustWall() {
+		int travelLenght = 5; // cm
+		grabMotor.lookRight();
+
+		int distanceMiddle = usSensor.getDistance();
+		System.out.println("dist 1: " + distanceMiddle);
+
+		pilot.travel(10 * travelLenght);
+		int distanceFront = usSensor.getDistance();
+		System.out.println("dist 2: " + distanceFront);
+
+		pilot.travel(10 * -travelLenght);
+
+		int diff = distanceFront - distanceMiddle;
+		double radiant = Math.asin((float) diff / travelLenght);
+		double degrees = Math.toDegrees(radiant);
+		System.out.println("angle: " + degrees);
+
+		pilot.rotate(-degrees);
+		grabMotor.lookAhead();
+	}
 }
