@@ -1,10 +1,12 @@
-import java.awt.Point;
 
 import lejos.nxt.LightSensor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.TouchSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.navigation.Move;
+import lejos.robotics.navigation.MoveListener;
+import lejos.robotics.navigation.MoveProvider;
 
 public class CokeBot {
 
@@ -17,7 +19,10 @@ public class CokeBot {
 	protected final CokeUltrasonic usSensor;
 
 	protected Point curpos;
-	protected float angle;
+	protected Point usPosition;
+	protected float curangle;
+	
+	private boolean isMoving;
 
 	public CokeBot() {
 		this.leftMotor = new NXTRegulatedMotor(Main.leftMotorPort);
@@ -28,12 +33,15 @@ public class CokeBot {
 		this.usSensor = new CokeUltrasonic(Main.usSensorPort);
 		this.pilot = new CokeDifferentialPilot(56, 142 - 26, leftMotor,
 				rightMotor);
-		curpos = new Point(0, 0);
+		
+		curpos = new Point(20, 20);
+		curangle = 0;
 	}
 
 	public void init() {
 		usSensor.continuous();
 		lightSensor.setFloodlight(true);
+		pilot.addMoveListener(new PositionKeeper());
 		calibrateMapPosition();
 	}
 
@@ -69,25 +77,29 @@ public class CokeBot {
 		curpos.setLocation(minx, miny);
 		pilot.rotate(-150); // rotate to initial state
 	}
-
-	protected void rangecalibration() {
-		pilot.setRotateSpeed(100);
-		grabMotor.setSpeed(50);
-		grabMotor.rotateTo(90, true);
-		float minrange = 300, range, mindeg = 0;
-		while (grabMotor.isMoving()) {
-			if ((range = usSensor.getRange()) < minrange) {
-				minrange = range;
-				mindeg = grabMotor.getTachoCount();
-			}
-		}
-		pilot.rotate(mindeg);
-		grabMotor.lookAhead();
+	
+	protected Point getUsPosition(){
+	  if(isMoving){
+	    Move event = pilot.getMovement();
+	    if(event.getMoveType().equals(Move.MoveType.ROTATE)){
+        return curpos.pointAt(
+            Main.distToEyes, 
+            Main.angleToEyes+curangle+event.getAngleTurned()
+            );
+      } else {
+        return curpos
+            .pointAt(event.getDistanceTraveled(), curangle)
+            .pointAt(Main.distToEyes, Main.angleToEyes+curangle);
+      }
+	    
+	  } else {
+	    return curpos.pointAt(Main.distToEyes, Main.angleToEyes+curangle);
+	  }
 	}
 
 	protected Point lookForCan() {
 		// TODO Richtigen Punkt zurueckgeben
-		return new Point();
+		return new Point(0, 0);
 	}
 
 	public void travelToCan() {
@@ -97,26 +109,38 @@ public class CokeBot {
 	protected void getCan() {
 
 	}
+	
+	private class PositionKeeper implements MoveListener {
+	  
+    public void moveStarted(Move event, MoveProvider mp) {
+      isMoving=true;
+    }
 
-	public void adjustWall() {
-		int travelLenght = 5; // cm
-		grabMotor.lookRight();
-
-		int distanceMiddle = usSensor.getDistance();
-		System.out.println("dist 1: " + distanceMiddle);
-
-		pilot.travel(10 * travelLenght);
-		int distanceFront = usSensor.getDistance();
-		System.out.println("dist 2: " + distanceFront);
-
-		pilot.travel(10 * -travelLenght);
-
-		int diff = distanceFront - distanceMiddle;
-		double radiant = Math.asin((float) diff / travelLenght);
-		double degrees = Math.toDegrees(radiant);
-		System.out.println("angle: " + degrees);
-
-		pilot.rotate(-degrees);
-		grabMotor.lookAhead();
+    @Override
+    public void moveStopped(Move event, MoveProvider mp) {
+      if(event.getMoveType().equals(Move.MoveType.ROTATE)){
+        curangle+=event.getAngleTurned();
+      } else {
+        curpos.moveAt(event.getDistanceTraveled(), curangle);
+      }
+      isMoving=false;
+    }
+	  
 	}
+	
+
+  protected void test() {
+    pilot.setRotateSpeed(100);
+    grabMotor.setSpeed(50);
+    grabMotor.rotateTo(90, true);
+    float minrange = 300, range, mindeg = 0;
+    while (grabMotor.isMoving()) {
+      if ((range = usSensor.getRange()) < minrange) {
+        minrange = range;
+        mindeg = grabMotor.getTachoCount();
+      }
+    }
+    pilot.rotate(mindeg);
+    grabMotor.lookAhead();
+  }
 }

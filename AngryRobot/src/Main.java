@@ -8,6 +8,8 @@ public class Main {
 	protected final static int length = 240; // every cm
 	protected final static int candiam = 6; // size in cm
 	protected final static int grabberlen = 13; // size in cm
+	protected final static int distToEyes = 14; // distance in cm
+	protected final static int angleToEyes = 20; // angle in degree
 
 	protected final static MotorPort leftMotorPort = MotorPort.C;
 	protected final static MotorPort rightMotorPort = MotorPort.B;

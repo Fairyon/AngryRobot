@@ -14,11 +14,10 @@ public class Controller extends Thread {
 		robot.init();
 		try {
 			//robot.rangecalibration();
-
+		  robot.init();
+		  
 			while (!isInterrupted()) {
 				// TODO Zur Wand justieren
-				robot.adjustWall();
-				Button.waitForAnyPress();
 
 				// TODO Sensor ausrichten
 
