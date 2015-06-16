@@ -66,6 +66,15 @@ public class CokeBot {
     pilot.rotate(-150); // rotate to initial state
 	}
 	
+	protected void rangecalibration(){
+	  pilot.setTravelSpeed(100);
+	  for(int i=0;i<10;i++){
+	    if(i%2==0)System.out.println();
+	    pilot.travel(50);
+	    System.out.print((int)usSensor.getDistance()+" ");
+	  }
+	}
+	
 	protected int[] lookForCan(){
 	  
 	  return new int[]{};
