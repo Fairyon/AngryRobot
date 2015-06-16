@@ -96,6 +96,33 @@ public class CokeBot {
 	    return curpos.pointAt(Main.distToEyes, Main.angleToEyes+curangle);
 	  }
 	}
+	
+	protected float getAngle(){
+	  if(isMoving){
+      Move event = pilot.getMovement();
+      if(event.getMoveType().equals(Move.MoveType.ROTATE)){
+        return curangle+event.getAngleTurned();
+      } else {
+        return curangle;
+      }
+      
+    } else {
+      return curangle;
+    }
+	}
+	
+	protected Point getPosition(){
+    if(isMoving){
+      Move event = pilot.getMovement();
+      if(event.getMoveType().equals(Move.MoveType.ROTATE)){
+        return curpos;
+      } else {
+        return curpos.pointAt(event.getDistanceTraveled(), curangle);
+      }
+    } else {
+      return curpos;
+    }
+  }
 
 	protected Point lookForCan() {
 		// TODO Richtigen Punkt zurueckgeben
