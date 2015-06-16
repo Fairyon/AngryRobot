@@ -3,14 +3,12 @@ import lejos.nxt.UltrasonicSensor;
 
 public class CokeUltrasonic extends UltrasonicSensor{
   
-  final float rangefactor = 1.f;
-
   public CokeUltrasonic(SensorPort port) {
     super(port);
   }
   
   public float getRange(){
-    return this.getDistance() * rangefactor;
+    return this.getDistance();
   }  
 
   /*public UltrasonicSensorExtended(I2CPort port) {

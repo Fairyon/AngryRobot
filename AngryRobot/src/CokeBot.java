@@ -1,6 +1,7 @@
 import lejos.nxt.LightSensor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.TouchSensor;
+import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.navigation.DifferentialPilot;
 
@@ -22,12 +23,12 @@ public class CokeBot {
 	  this.lightSensor = new LightSensor(Main.lightSensorPort);
 	  this.canTouchSensor = new TouchSensor(Main.canTouchSensorPort);
 	  this.usSensor = new CokeUltrasonic(Main.usSensorPort);
-		this.pilot = new CalibratedDifferentialPilot(56, 142-26, leftMotor, rightMotor);
+		this.pilot = new CokeDifferentialPilot(56, 142-26, leftMotor, rightMotor);
 		curpos = new int[]{0, 0};
 	}
 	
 	public void init(){
-	  usSensor.continuous();
+	  usSensor.setMode(UltrasonicSensor.MODE_PING);
 	  lightSensor.setFloodlight(true);
 	  calibrateMapPosition();
 	}
@@ -66,13 +67,10 @@ public class CokeBot {
     pilot.rotate(-150); // rotate to initial state
 	}
 	
-	protected void rangecalibration(){
-	  pilot.setTravelSpeed(100);
-	  for(int i=0;i<10;i++){
-	    if(i%2==0)System.out.println();
-	    pilot.travel(50);
-	    System.out.print((int)usSensor.getDistance()+" ");
-	  }
+	protected void rangecalibration() throws InterruptedException{
+	  //System.out.println(usSensor.getRange());
+	  grabMotor.lookLeft();
+	  pilot.forward();
 	}
 	
 	protected int[] lookForCan(){

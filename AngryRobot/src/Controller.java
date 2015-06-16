@@ -11,7 +11,12 @@ public class Controller extends Thread{
   
   public void run(){
     //robot.init();
-    robot.rangecalibration();
+    try {
+      robot.rangecalibration();
+    } catch (InterruptedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
   
   public void stop(){
