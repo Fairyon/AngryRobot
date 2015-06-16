@@ -1,9 +1,6 @@
-import lejos.nxt.Button;
-import lejos.nxt.MotorPort;
-import lejos.nxt.SensorPort;
+import lejos.nxt.*;
 
 public class Main {
-
 	protected final static int width = 114; // every cm
 	protected final static int length = 240; // every cm
 	protected final static int candiam = 6; // size in cm

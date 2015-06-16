@@ -1,7 +1,4 @@
-import lejos.nxt.Button;
-
 public class Controller extends Thread {
-
 	private CokeBot robot;
 	private Map map;
 
@@ -13,9 +10,10 @@ public class Controller extends Thread {
 	public void run() {
 		robot.init();
 		try {
-			//robot.rangecalibration();
-		  robot.init();
-		  
+			// robot.rangecalibration();
+
+			robot.usSensor.addSensorPortListener(new UsMapListener(robot, map));
+
 			while (!isInterrupted()) {
 				// TODO Zur Wand justieren
 

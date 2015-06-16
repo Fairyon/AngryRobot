@@ -1,4 +1,3 @@
-
 import lejos.nxt.LightSensor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.TouchSensor;
@@ -16,12 +15,12 @@ public class CokeBot {
 	protected final GrabMotor grabMotor;
 	protected final LightSensor lightSensor;
 	protected final TouchSensor canTouchSensor;
-	protected final CokeUltrasonic usSensor;
+	protected final UltrasonicSensorExtended usSensor;
 
 	protected Point curpos;
 	protected Point usPosition;
 	protected float curangle;
-	
+
 	private boolean isMoving;
 
 	public CokeBot() {
@@ -30,10 +29,10 @@ public class CokeBot {
 		this.grabMotor = new GrabMotor(Main.grabMotorPort);
 		this.lightSensor = new LightSensor(Main.lightSensorPort);
 		this.canTouchSensor = new TouchSensor(Main.canTouchSensorPort);
-		this.usSensor = new CokeUltrasonic(Main.usSensorPort);
+		this.usSensor = new UltrasonicSensorExtended(Main.usSensorPort);
 		this.pilot = new CokeDifferentialPilot(56, 142 - 26, leftMotor,
 				rightMotor);
-		
+
 		curpos = new Point(20, 20);
 		curangle = 0;
 	}
@@ -77,52 +76,49 @@ public class CokeBot {
 		curpos.setLocation(minx, miny);
 		pilot.rotate(-150); // rotate to initial state
 	}
-	
-	protected Point getUsPosition(){
-	  if(isMoving){
-	    Move event = pilot.getMovement();
-	    if(event.getMoveType().equals(Move.MoveType.ROTATE)){
-        return curpos.pointAt(
-            Main.distToEyes, 
-            Main.angleToEyes+curangle+event.getAngleTurned()
-            );
-      } else {
-        return curpos
-            .pointAt(event.getDistanceTraveled(), curangle)
-            .pointAt(Main.distToEyes, Main.angleToEyes+curangle);
-      }
-	    
-	  } else {
-	    return curpos.pointAt(Main.distToEyes, Main.angleToEyes+curangle);
-	  }
+
+	protected Point getUsPosition() {
+		if (isMoving) {
+			Move event = pilot.getMovement();
+			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
+				return curpos.pointAt(Main.distToEyes, Main.angleToEyes
+						+ curangle + event.getAngleTurned());
+			} else {
+				return curpos.pointAt(event.getDistanceTraveled(), curangle)
+						.pointAt(Main.distToEyes, Main.angleToEyes + curangle);
+			}
+
+		} else {
+			return curpos.pointAt(Main.distToEyes, Main.angleToEyes + curangle);
+		}
 	}
-	
-	protected float getAngle(){
-	  if(isMoving){
-      Move event = pilot.getMovement();
-      if(event.getMoveType().equals(Move.MoveType.ROTATE)){
-        return curangle+event.getAngleTurned();
-      } else {
-        return curangle;
-      }
-      
-    } else {
-      return curangle;
-    }
+
+	protected float getAngle() {
+		if (isMoving) {
+			Move event = pilot.getMovement();
+			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
+				return curangle + event.getAngleTurned();
+			} else {
+				return curangle;
+			}
+
+		} else {
+			return curangle;
+		}
 	}
-	
-	protected Point getPosition(){
-    if(isMoving){
-      Move event = pilot.getMovement();
-      if(event.getMoveType().equals(Move.MoveType.ROTATE)){
-        return curpos;
-      } else {
-        return curpos.pointAt(event.getDistanceTraveled(), curangle);
-      }
-    } else {
-      return curpos;
-    }
-  }
+
+	protected Point getPosition() {
+		if (isMoving) {
+			Move event = pilot.getMovement();
+			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
+				return curpos;
+			} else {
+				return curpos.pointAt(event.getDistanceTraveled(), curangle);
+			}
+		} else {
+			return curpos;
+		}
+	}
 
 	protected Point lookForCan() {
 		// TODO Richtigen Punkt zurueckgeben
@@ -136,38 +132,37 @@ public class CokeBot {
 	protected void getCan() {
 
 	}
-	
+
 	private class PositionKeeper implements MoveListener {
-	  
-    public void moveStarted(Move event, MoveProvider mp) {
-      isMoving=true;
-    }
 
-    @Override
-    public void moveStopped(Move event, MoveProvider mp) {
-      if(event.getMoveType().equals(Move.MoveType.ROTATE)){
-        curangle+=event.getAngleTurned();
-      } else {
-        curpos.moveAt(event.getDistanceTraveled(), curangle);
-      }
-      isMoving=false;
-    }
-	  
+		public void moveStarted(Move event, MoveProvider mp) {
+			isMoving = true;
+		}
+
+		@Override
+		public void moveStopped(Move event, MoveProvider mp) {
+			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
+				curangle += event.getAngleTurned();
+			} else {
+				curpos.moveAt(event.getDistanceTraveled(), curangle);
+			}
+			isMoving = false;
+		}
+
 	}
-	
 
-  protected void test() {
-    pilot.setRotateSpeed(100);
-    grabMotor.setSpeed(50);
-    grabMotor.rotateTo(90, true);
-    float minrange = 300, range, mindeg = 0;
-    while (grabMotor.isMoving()) {
-      if ((range = usSensor.getRange()) < minrange) {
-        minrange = range;
-        mindeg = grabMotor.getTachoCount();
-      }
-    }
-    pilot.rotate(mindeg);
-    grabMotor.lookAhead();
-  }
+	protected void test() {
+		pilot.setRotateSpeed(100);
+		grabMotor.setSpeed(50);
+		grabMotor.rotateTo(90, true);
+		float minrange = 300, range, mindeg = 0;
+		while (grabMotor.isMoving()) {
+			if ((range = usSensor.getRange()) < minrange) {
+				minrange = range;
+				mindeg = grabMotor.getTachoCount();
+			}
+		}
+		pilot.rotate(mindeg);
+		grabMotor.lookAhead();
+	}
 }
