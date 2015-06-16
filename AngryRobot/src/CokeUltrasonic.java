@@ -18,6 +18,11 @@ public class CokeUltrasonic {
   public int off(){
     return uss.off();
   }
+  
+  public int continuous(){
+    return uss.continuous();
+  }
+  
 
   /*public UltrasonicSensorExtended(I2CPort port) {
     super(port);

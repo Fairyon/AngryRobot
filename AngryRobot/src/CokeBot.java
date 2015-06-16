@@ -27,6 +27,7 @@ public class CokeBot {
 	}
 	
 	public void init(){
+	  usSensor.continuous();
 	  lightSensor.setFloodlight(true);
 	  calibrateMapPosition();
 	}

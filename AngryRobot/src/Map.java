@@ -6,4 +6,5 @@ public class Map {
   public Map(int xdim, int ydim){
     map = new byte[xdim][ydim];
   }
+ 
 }
