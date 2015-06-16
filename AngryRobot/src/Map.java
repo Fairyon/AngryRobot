@@ -118,8 +118,8 @@ public class Map {
 					continue;
 
 				Point size = getSize(x, y);
-				if (size.x >= Main.candiam - 2 && size.x <= Main.candiam
-						&& size.y >= Main.candiam - 2 && size.y <= Main.candiam) {
+				if ((size.x >= Main.candiam - 2 && size.x <= Main.candiam)
+						|| (size.y >= Main.candiam - 2 && size.y <= Main.candiam)) {
 					System.out.println("Possible can: (" + size.x + ","
 							+ size.y + ")");
 					points.add(new Point(x, y));
