@@ -14,7 +14,14 @@ public class Controller extends Thread {
 	}
 
 	public void stop() {
+		this.interrupt();
 
+		try {
+			this.join();
+		} catch (InterruptedException e) {
+			System.out.println("'Stop' interrupted");
+			e.printStackTrace();
+		}
 	}
 
 }
