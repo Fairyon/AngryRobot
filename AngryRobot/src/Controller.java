@@ -9,8 +9,12 @@ public class Controller extends Thread {
 	}
 
 	public void run() {
-		// robot.init();
-		robot.rangecalibration();
+		try {
+			// robot.init();
+			robot.rangecalibration();
+		} finally {
+			robot.stop();
+		}
 	}
 
 	public void stop() {
