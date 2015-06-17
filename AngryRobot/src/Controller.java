@@ -1,14 +1,18 @@
 public class Controller extends Thread {
-	private CokeBot robot;
+	private ColaBot robot;
 	private Map map;
 
 	protected Controller() {
-		this.robot = new CokeBot();
+		this.robot = new ColaBot();
 		this.map = new Map(Main.length, Main.width);
 	}
 
 	public void run() {
-		robot.init();
+	  robot.init();
+	  robot.usSensor.addSensorPortListener(new UsMapListener(robot, map));
+	  robot.test();
+	  
+	  /*
 		try {
 			// robot.rangecalibration();
 
@@ -29,7 +33,7 @@ public class Controller extends Thread {
 				// TODO Losfahren
 
 				// TODO Dose schnappen
-				robot.getCan();
+				//robot.getCan();
 
 				// TODO Zurueck fahren
 
@@ -37,11 +41,11 @@ public class Controller extends Thread {
 		} finally {
 			robot.stop();
 		}
+		*/
 	}
 
 	public void stop() {
 		this.interrupt();
-
 		try {
 			this.join();
 		} catch (InterruptedException e) {

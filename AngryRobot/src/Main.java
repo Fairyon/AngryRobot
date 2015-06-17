@@ -1,9 +1,12 @@
 import lejos.nxt.*;
 
 public class Main {
+  
+  protected final static int usLimit = 160; // limit for us in cm
+  
 	protected final static int width = 114; // every cm
 	protected final static int length = 240; // every cm
-	protected final static int candiam = 6; // size in cm
+	protected final static int candiam = 7; // size in cm
 	protected final static int grabberlen = 13; // size in cm
 	protected final static int distToEyes = 14; // distance in cm
 	protected final static int angleToEyes = 20; // angle in degree

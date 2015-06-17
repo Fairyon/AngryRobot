@@ -1,53 +1,48 @@
-import java.awt.Point;
 import java.util.ArrayList;
 
 public class Map {
 	private byte[][] map;
 
 	public Map(int xdim, int ydim) {
-		if (xdim <= 0)
+		if (xdim < 1)
 			throw new IllegalArgumentException("xdim too small");
-		if (ydim <= 0)
+		if (ydim < 1)
 			throw new IllegalArgumentException("ydim too small");
 
-		map = new byte[xdim][ydim];
+		map = new byte[xdim + 2][ydim + 2];
 	}
 
-	public byte getValue(Point point) {
-		return getValue(point.x, point.y);
+	public byte getValue(Point point) throws ArrayIndexOutOfBoundsException {
+		return getValue((int)point.x, (int)point.y);
 	}
 
-	public byte getValue(int x, int y) {
+	public byte getValue(int x, int y) throws ArrayIndexOutOfBoundsException {
 		return map[x][y];
 	}
 
-	public void increment(Point point) {
-		increment(point.x, point.y);
+	public void increment(Point point) throws ArrayIndexOutOfBoundsException {
+		increment((int)point.x, (int)point.y);
 	}
 
-	public void increment(int x, int y) {
-		if (map[x][y] == Byte.MAX_VALUE)
-			return;
-
-		map[x][y]++;
+	public void increment(int x, int y) throws ArrayIndexOutOfBoundsException {
+		if (map[x][y] < Byte.MAX_VALUE) 
+		  map[x][y]++;
 	}
 
-	public void decrement(Point point) {
-		decrement(point.x, point.y);
+	public void decrement(Point point) throws ArrayIndexOutOfBoundsException {
+		decrement((int)point.x, (int)point.y);
 	}
 
-	public void decrement(int x, int y) {
-		if (map[x][y] == 0)
-			return;
-
-		map[x][y]--;
+	public void decrement(int x, int y) throws ArrayIndexOutOfBoundsException {
+		if (map[x][y] > 0) 
+		  map[x][y]--;
 	}
 
-	public void reset(Point point) {
-		reset(point.x, point.y);
+	public void reset(Point point) throws ArrayIndexOutOfBoundsException {
+		reset((int)point.x, (int)point.y);
 	}
 
-	public void reset(int x, int y) {
+	public void reset(int x, int y) throws ArrayIndexOutOfBoundsException {
 		map[x][y] = 0;
 	}
 
@@ -59,7 +54,7 @@ public class Map {
 		return map[0].length;
 	}
 
-	private int countLeftNeighbours(int x, int y) {
+	private int countLeftNeighbours(int x, int y){
 		int left = 0;
 
 		if (x > 0 && getValue(x - 1, y) > 0) {
@@ -114,14 +109,13 @@ public class Map {
 
 		for (int x = 0; x < xMax; x++) {
 			for (int y = 0; y < yMax; y++) {
-				if (getValue(x, y) == 0)
+				if (getValue(x, y) < 1)
 					continue;
 
 				Point size = getSize(x, y);
 				if (size.x >= Main.candiam - 2 && size.x <= Main.candiam
 						&& size.y >= Main.candiam - 2 && size.y <= Main.candiam) {
-					System.out.println("Possible can: (" + size.x + ","
-							+ size.y + ")");
+					System.out.println("Possible can: " + size);
 					points.add(new Point(x, y));
 				}
 			}

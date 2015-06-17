@@ -1,3 +1,4 @@
+import lejos.nxt.Button;
 import lejos.nxt.LightSensor;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.TouchSensor;
@@ -7,7 +8,7 @@ import lejos.robotics.navigation.Move;
 import lejos.robotics.navigation.MoveListener;
 import lejos.robotics.navigation.MoveProvider;
 
-public class CokeBot {
+public class ColaBot {
 
 	private final DifferentialPilot pilot;
 	protected final RegulatedMotor leftMotor;
@@ -15,7 +16,7 @@ public class CokeBot {
 	protected final GrabMotor grabMotor;
 	protected final LightSensor lightSensor;
 	protected final TouchSensor canTouchSensor;
-	protected final UltrasonicSensorExtended usSensor;
+	protected final ColaUltrasonicSensor usSensor;
 
 	protected Point curpos;
 	protected Point usPosition;
@@ -23,14 +24,14 @@ public class CokeBot {
 
 	private boolean isMoving;
 
-	public CokeBot() {
+	public ColaBot() {
 		this.leftMotor = new NXTRegulatedMotor(Main.leftMotorPort);
 		this.rightMotor = new NXTRegulatedMotor(Main.rightMotorPort);
 		this.grabMotor = new GrabMotor(Main.grabMotorPort);
 		this.lightSensor = new LightSensor(Main.lightSensorPort);
 		this.canTouchSensor = new TouchSensor(Main.canTouchSensorPort);
-		this.usSensor = new UltrasonicSensorExtended(Main.usSensorPort);
-		this.pilot = new CokeDifferentialPilot(56, 142 - 26, leftMotor,
+		this.usSensor = new ColaUltrasonicSensor(Main.usSensorPort);
+		this.pilot = new ColaDifferentialPilot(56, 142 - 26, leftMotor,
 				rightMotor);
 
 		curpos = new Point(20, 20);
@@ -41,7 +42,7 @@ public class CokeBot {
 		usSensor.continuous();
 		lightSensor.setFloodlight(true);
 		pilot.addMoveListener(new PositionKeeper());
-		calibrateMapPosition();
+		//calibrate();
 	}
 
 	public void stop() {
@@ -51,30 +52,37 @@ public class CokeBot {
 		usSensor.off();
 	}
 
-	private void calibrateMapPosition() {
+	private void calibrate() {
 		int minx = 300;
 		int miny = 300;
-		float curdist;
+		int curdist;
+		float angle;
+		float minxangle = 360;
+		float minyangle = 360;
 		this.pilot.setRotateSpeed(100);
-		pilot.rotate(-120, true); // look to left bottom corner
+		pilot.rotate(-45, false); // TODO mapping
+		pilot.rotate(-90, true); // look to left bottom corner
 		while (pilot.isMoving()) {
 			curdist = usSensor.getDistance();
+			angle = grabMotor.getTachoCount();
 			if (curdist < miny) {
-				miny = (int) curdist;
+				miny = curdist;
+				minyangle = -45 + angle;
 			}
 		}
 		miny += Main.grabberlen;
 		pilot.rotate(-90, true);
 		while (pilot.isMoving()) { // look to left top corner
 			curdist = usSensor.getDistance();
+			angle = grabMotor.getTachoCount();
 			if (curdist < minx) {
 				minx = (int) curdist;
+				minxangle = -135 + angle;
 			}
 		}
+		curangle = ((-90-minyangle)+(-180-minxangle))/2 + 135;
 		minx += Main.grabberlen;
 		System.out.println("Startpos: " + minx + ", " + miny);
-		curpos.setLocation(minx, miny);
-		pilot.rotate(-150); // rotate to initial state
 	}
 
 	protected Point getUsPosition() {
@@ -92,6 +100,10 @@ public class CokeBot {
 			return curpos.pointAt(Main.distToEyes, Main.angleToEyes + curangle);
 		}
 	}
+	
+	protected float getUSAngle() {
+    return getAngle()+grabMotor.getTachoCount();
+  }
 
 	protected float getAngle() {
 		if (isMoving) {
@@ -144,7 +156,9 @@ public class CokeBot {
 			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
 				curangle += event.getAngleTurned();
 			} else {
-				curpos.moveAt(event.getDistanceTraveled(), curangle);
+				curpos.moveAt(event.getDistanceTraveled()*0.09645f, curangle);
+				System.out.println(curpos);
+	      System.out.println(curangle);
 			}
 			isMoving = false;
 		}
@@ -152,7 +166,14 @@ public class CokeBot {
 	}
 
 	protected void test() {
-		pilot.setRotateSpeed(100);
+	  pilot.setRotateSpeed(100);
+	  pilot.setTravelSpeed(150);
+	  pilot.travel(1000);
+    pilot.rotate(180);
+    pilot.travel(1000);
+    pilot.rotate(180);
+	  Button.waitForAnyPress();
+		/*pilot.setRotateSpeed(100);
 		grabMotor.setSpeed(50);
 		grabMotor.rotateTo(90, true);
 		float minrange = 300, range, mindeg = 0;
@@ -163,6 +184,6 @@ public class CokeBot {
 			}
 		}
 		pilot.rotate(mindeg);
-		grabMotor.lookAhead();
+		grabMotor.lookAhead();*/
 	}
 }

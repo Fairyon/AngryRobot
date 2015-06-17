@@ -5,7 +5,7 @@ import lejos.nxt.*;
 /**
  * Erweiter die Klasse <code>UltrasonicSensor</code> um das Listener-Konzept.
  */
-public class UltrasonicSensorExtended extends UltrasonicSensor {
+public class ColaUltrasonicSensor extends UltrasonicSensor {
 	private SensorPort port;
 	private short numListeners;
 	private SensorPortListener[] listeners;
@@ -19,7 +19,7 @@ public class UltrasonicSensorExtended extends UltrasonicSensor {
 	 * @param port
 	 *            Port, an den der Ultraschallsensor angeschlossen wurde.
 	 */
-	public UltrasonicSensorExtended(SensorPort port) {
+	public ColaUltrasonicSensor(SensorPort port) {
 		super(port);
 
 		this.port = port;

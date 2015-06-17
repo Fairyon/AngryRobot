@@ -23,10 +23,10 @@ public class UltrasonicListenerThread extends Thread {
 		return singleton;
 	}
 
-	private ArrayList<UltrasonicSensorExtended> callers;
+	private ArrayList<ColaUltrasonicSensor> callers;
 
 	private UltrasonicListenerThread() {
-		callers = new ArrayList<UltrasonicSensorExtended>();
+		callers = new ArrayList<ColaUltrasonicSensor>();
 	}
 
 	/**
@@ -36,7 +36,7 @@ public class UltrasonicListenerThread extends Thread {
 	 *            Das Callback-Objekt, das aufgerufen wird, wenn sich der Wert
 	 *            des Sensors aendert.
 	 */
-	public synchronized void addCallback(UltrasonicSensorExtended caller) {
+	public synchronized void addCallback(ColaUltrasonicSensor caller) {
 		callers.add(caller);
 
 		// Thread starten, wenn das erste CallBack-Objekt registriert wurde
@@ -46,7 +46,7 @@ public class UltrasonicListenerThread extends Thread {
 
 	@Override
 	public void run() {
-		UltrasonicSensorExtended caller;
+		ColaUltrasonicSensor caller;
 
 		while (!isInterrupted()) {
 			try {
