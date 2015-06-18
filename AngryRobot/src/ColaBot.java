@@ -10,6 +10,8 @@ import lejos.robotics.navigation.MoveProvider;
 
 public class ColaBot {
 
+  private final float distanceFactor = 0.09639f;
+  private final float rotationFactor = 0.995f;
 	private final DifferentialPilot pilot;
 	protected final RegulatedMotor leftMotor;
 	protected final RegulatedMotor rightMotor;
@@ -154,11 +156,9 @@ public class ColaBot {
 		@Override
 		public void moveStopped(Move event, MoveProvider mp) {
 			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
-				curangle += event.getAngleTurned();
+				curangle += event.getAngleTurned()*rotationFactor;
 			} else {
-				curpos.moveAt(event.getDistanceTraveled()*0.09645f, curangle);
-				System.out.println(curpos);
-	      System.out.println(curangle);
+				curpos.moveAt(event.getDistanceTraveled()*distanceFactor, curangle);
 			}
 			isMoving = false;
 		}
@@ -168,13 +168,14 @@ public class ColaBot {
 	protected void test() {
 	  pilot.setRotateSpeed(100);
 	  pilot.setTravelSpeed(150);
-	  pilot.travel(1000);
-    pilot.rotate(180);
-    pilot.travel(1000);
-    pilot.rotate(180);
+	  //pilot.travel(1000);
+    pilot.rotate(90);
+    //pilot.travel(-1000);
+    pilot.rotate(90);
+    pilot.rotate(90);
+    pilot.rotate(90);
 	  Button.waitForAnyPress();
-		/*pilot.setRotateSpeed(100);
-		grabMotor.setSpeed(50);
+		/*grabMotor.setSpeed(50);
 		grabMotor.rotateTo(90, true);
 		float minrange = 300, range, mindeg = 0;
 		while (grabMotor.isMoving()) {
