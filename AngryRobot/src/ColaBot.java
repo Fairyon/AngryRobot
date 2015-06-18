@@ -5,7 +5,7 @@ import lejos.robotics.navigation.*;
 public class ColaBot {
 	private static final float distanceFactor = 0.09639f;
 	private static final float rotationFactor = 0.995f;
-	
+
 	private final DifferentialPilot pilot;
 	private final RegulatedMotor leftMotor;
 	private final RegulatedMotor rightMotor;
@@ -38,6 +38,9 @@ public class ColaBot {
 		lightSensor.setFloodlight(true);
 		pilot.addMoveListener(new PositionKeeper());
 		// calibrate();
+
+		pilot.setRotateSpeed(75);
+		pilot.setTravelSpeed(150);
 	}
 
 	public void stop() {
@@ -48,16 +51,67 @@ public class ColaBot {
 	}
 
 	public void addUsSensorPortListener(SensorPortListener listener) {
-		if(listener == null)
+		if (listener == null)
 			throw new NullPointerException("listener is null");
-		
+
 		usSensor.addSensorPortListener(listener);
 	}
-	
+
+	/**
+	 * Resets the position of the ultrasonic sensor
+	 */
+	public void resetUsRotation() {
+		grabMotor.lookAhead();
+	}
+
+	/**
+	 * Rotates the ultrasonic sensor to the specified angle
+	 * 
+	 * @param angle
+	 *            Angle to rotate the ultrasonic sensor
+	 */
+	public void rotateUsTo(int angle) {
+		if (Math.abs(angle) > 90)
+			throw new IllegalArgumentException("invalid angle " + angle);
+
+		grabMotor.rotateTo(angle);
+	}
+
 	public int getUsDistance() {
 		return usSensor.getDistance();
 	}
-	
+
+	/**
+	 * Lets the robot travel a specified range
+	 * 
+	 * @param distance
+	 *            Range to travel
+	 * @param immediateReturn
+	 *            If true this method returns immediately
+	 */
+	public void travel(double distance, boolean immediateReturn) {
+		pilot.travel(distance, immediateReturn);
+	}
+
+	/**
+	 * Lets the robot travel a specified range
+	 * 
+	 * @param distance
+	 *            Range to travel
+	 */
+	public void travel(double distance) {
+		travel(distance, false);
+	}
+
+	/**
+	 * Check if the sensor is pressed
+	 * 
+	 * @return true if sensor is pressed, false otherwise
+	 */
+	public boolean isTouchSensorPressed() {
+		return canTouchSensor.isPressed();
+	}
+
 	private void calibrate() {
 		int minx = 300;
 		int miny = 300;
@@ -138,17 +192,67 @@ public class ColaBot {
 		}
 	}
 
-	protected Point lookForCan() {
-		// TODO Richtigen Punkt zurueckgeben
-		return new Point(0, 0);
+	/**
+	 * true if the robot is moving
+	 * 
+	 * @return true if the robot is moving
+	 */
+	public boolean isMoving() {
+		return pilot.isMoving();
 	}
 
-	public void travelToCan() {
-
+	/**
+	 * Rotates the robot through a specific angle
+	 * 
+	 * @param angle
+	 *            The wanted angle of rotation in degrees. Positive angle rotate
+	 *            left (anti-clockwise), negative right.
+	 * @param immediateReturn
+	 *            If true this method returns immediately.
+	 */
+	public void rotate(float angle, boolean immediateReturn) {
+		pilot.rotate(angle, immediateReturn);
 	}
 
-	protected void getCan() {
+	/**
+	 * Rotates the robot through a specific angle
+	 * 
+	 * @param angle
+	 *            The wanted angle of rotation in degrees. Positive angle rotate
+	 *            left (anti-clockwise), negative right.
+	 */
+	public void rotate(float angle) {
+		rotate(angle, false);
+	}
 
+	/**
+	 * Rotates the robot to the specific angle
+	 * 
+	 * @param angle
+	 *            The wanted angle of the robot after the rotation in degrees
+	 * @param immediateReturn
+	 *            If true this method returns immediately.
+	 */
+	public void rotateTo(float angle, boolean immediateReturn) {
+		float absoluteAngle = angle - getAngle();
+		pilot.rotate(absoluteAngle, immediateReturn);
+	}
+
+	/**
+	 * Rotates the robot to the specific angle
+	 * 
+	 * @param angle
+	 *            The wanted angle of the robot after the rotation in degrees
+	 */
+	public void rotateTo(float angle) {
+		rotateTo(angle, false);
+	}
+
+	/**
+	 * Stops the robots movement
+	 */
+	public void stopMovement() {
+		pilot.stop();
 	}
 
 	private class PositionKeeper implements MoveListener {
@@ -181,16 +285,10 @@ public class ColaBot {
 		pilot.rotate(90);
 		Button.waitForAnyPress();
 		/*
-		 * grabMotor.setSpeed(50); 
-		 * grabMotor.rotateTo(90, true); 
-		 * float minrange = 300, range, mindeg = 0; 
-		 * while (grabMotor.isMoving()) { 
-		 * 	if ((range = usSensor.getRange()) < minrange) { 
-		 * 		minrange = range; 
-		 * 		mindeg = grabMotor.getTachoCount();
-		 * 	} 
-		 * } 
-		 * pilot.rotate(mindeg);
+		 * grabMotor.setSpeed(50); grabMotor.rotateTo(90, true); float minrange
+		 * = 300, range, mindeg = 0; while (grabMotor.isMoving()) { if ((range =
+		 * usSensor.getRange()) < minrange) { minrange = range; mindeg =
+		 * grabMotor.getTachoCount(); } } pilot.rotate(mindeg);
 		 * grabMotor.lookAhead();
 		 */
 	}
