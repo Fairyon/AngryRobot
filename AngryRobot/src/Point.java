@@ -8,11 +8,11 @@ public class Point {
   /**
    * The x coordinate of the point
    */
-  public float x;
+  private float x;
   /**
    * The y coordinate of the point
    */
-  public float y;
+  private float y;
 
   /**
    * Create a point at (0,0) with float coordinates
@@ -44,6 +44,14 @@ public class Point {
 
   public float getY() {
     return y;
+  }
+  
+  protected void setX(float x){
+    this.x = x;
+  }
+  
+  protected void setY(float y){
+    this.y = y;
   }
 
   /**
