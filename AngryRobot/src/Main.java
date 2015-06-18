@@ -1,11 +1,12 @@
 import lejos.nxt.*;
+import lejos.nxt.comm.RConsole;
 
 public class Main {
-  
-  protected final static int usLimit = 160; // limit for us in cm
-  
-	protected final static int width = 114; // every cm
-	protected final static int length = 240; // every cm
+
+	protected final static int usLimit = 160; // limit for us in cm
+
+	protected final static int width = 114; // every mm
+	protected final static int length = 240; // every mm
 	protected final static int candiam = 7; // size in cm
 	protected final static int grabberlen = 13; // size in cm
 	protected final static int distToEyes = 14; // distance in cm
@@ -23,13 +24,26 @@ public class Main {
 	protected final static int rotationSpeed = 200;
 
 	public static void main(String[] args) {
-		// Button.waitForAnyPress();
+		RConsole.openUSB(0);
+		if (RConsole.isOpen()) {
+			System.setOut(RConsole.getPrintStream());
+			System.setErr(RConsole.getPrintStream());
+		}
 
-		Controller c = new Controller();
-		c.start();
+		try {
+			// Button.waitForAnyPress();
 
-		Button.waitForAnyPress();
-		c.stop();
+			Controller c = new Controller();
+			c.start();
+
+			Button.waitForAnyPress();
+			c.stop();
+		} finally {
+			if (RConsole.isOpen()) {
+				RConsole.close();
+			}
+		}
+
 		System.exit(0);
 	}
 
