@@ -20,7 +20,7 @@ public class UsMapListener implements SensorPortListener {
 	public void stateChanged(SensorPort source, int oldValue, int newValue) {
 		Point pos = robot.getUsPosition();
 		float angle = robot.getUSAngle();
-		int distance = robot.usSensor.getDistance();
+		int distance = robot.getUsDistance();
 		//System.out.print(distance+" ");
 
 		Point direction = Point.getDirectionVector(1, angle);

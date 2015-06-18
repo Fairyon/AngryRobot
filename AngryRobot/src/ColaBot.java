@@ -1,28 +1,21 @@
-import lejos.nxt.Button;
-import lejos.nxt.LightSensor;
-import lejos.nxt.NXTRegulatedMotor;
-import lejos.nxt.TouchSensor;
-import lejos.robotics.RegulatedMotor;
-import lejos.robotics.navigation.DifferentialPilot;
-import lejos.robotics.navigation.Move;
-import lejos.robotics.navigation.MoveListener;
-import lejos.robotics.navigation.MoveProvider;
+import lejos.nxt.*;
+import lejos.robotics.*;
+import lejos.robotics.navigation.*;
 
 public class ColaBot {
-
-  private final float distanceFactor = 0.09639f;
-  private final float rotationFactor = 0.995f;
+	private static final float distanceFactor = 0.09639f;
+	private static final float rotationFactor = 0.995f;
+	
 	private final DifferentialPilot pilot;
-	protected final RegulatedMotor leftMotor;
-	protected final RegulatedMotor rightMotor;
-	protected final GrabMotor grabMotor;
-	protected final LightSensor lightSensor;
-	protected final TouchSensor canTouchSensor;
-	protected final ColaUltrasonicSensor usSensor;
+	private final RegulatedMotor leftMotor;
+	private final RegulatedMotor rightMotor;
+	private final GrabMotor grabMotor;
+	private final LightSensor lightSensor;
+	private final TouchSensor canTouchSensor;
+	private final ColaUltrasonicSensor usSensor;
 
-	protected Point curpos;
-	protected Point usPosition;
-	protected float curangle;
+	private Point curpos;
+	private float curangle;
 
 	private boolean isMoving;
 
@@ -44,7 +37,7 @@ public class ColaBot {
 		usSensor.continuous();
 		lightSensor.setFloodlight(true);
 		pilot.addMoveListener(new PositionKeeper());
-		//calibrate();
+		// calibrate();
 	}
 
 	public void stop() {
@@ -54,6 +47,17 @@ public class ColaBot {
 		usSensor.off();
 	}
 
+	public void addUsSensorPortListener(SensorPortListener listener) {
+		if(listener == null)
+			throw new NullPointerException("listener is null");
+		
+		usSensor.addSensorPortListener(listener);
+	}
+	
+	public int getUsDistance() {
+		return usSensor.getDistance();
+	}
+	
 	private void calibrate() {
 		int minx = 300;
 		int miny = 300;
@@ -82,7 +86,7 @@ public class ColaBot {
 				minxangle = -135 + angle;
 			}
 		}
-		curangle = ((-90-minyangle)+(-180-minxangle))/2 + 135;
+		curangle = ((-90 - minyangle) + (-180 - minxangle)) / 2 + 135;
 		minx += Main.grabberlen;
 		System.out.println("Startpos: " + minx + ", " + miny);
 	}
@@ -102,10 +106,10 @@ public class ColaBot {
 			return curpos.pointAt(Main.distToEyes, Main.angleToEyes + curangle);
 		}
 	}
-	
+
 	protected float getUSAngle() {
-    return getAngle()+grabMotor.getTachoCount();
-  }
+		return getAngle() + grabMotor.getTachoCount();
+	}
 
 	protected float getAngle() {
 		if (isMoving) {
@@ -156,9 +160,10 @@ public class ColaBot {
 		@Override
 		public void moveStopped(Move event, MoveProvider mp) {
 			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
-				curangle += event.getAngleTurned()*rotationFactor;
+				curangle += event.getAngleTurned() * rotationFactor;
 			} else {
-				curpos.moveAt(event.getDistanceTraveled()*distanceFactor, curangle);
+				curpos.moveAt(event.getDistanceTraveled() * distanceFactor,
+						curangle);
 			}
 			isMoving = false;
 		}
@@ -166,25 +171,27 @@ public class ColaBot {
 	}
 
 	protected void test() {
-	  pilot.setRotateSpeed(100);
-	  pilot.setTravelSpeed(150);
-	  //pilot.travel(1000);
-    pilot.rotate(90);
-    //pilot.travel(-1000);
-    pilot.rotate(90);
-    pilot.rotate(90);
-    pilot.rotate(90);
-	  Button.waitForAnyPress();
-		/*grabMotor.setSpeed(50);
-		grabMotor.rotateTo(90, true);
-		float minrange = 300, range, mindeg = 0;
-		while (grabMotor.isMoving()) {
-			if ((range = usSensor.getRange()) < minrange) {
-				minrange = range;
-				mindeg = grabMotor.getTachoCount();
-			}
-		}
-		pilot.rotate(mindeg);
-		grabMotor.lookAhead();*/
+		pilot.setRotateSpeed(100);
+		pilot.setTravelSpeed(150);
+		// pilot.travel(1000);
+		pilot.rotate(90);
+		// pilot.travel(-1000);
+		pilot.rotate(90);
+		pilot.rotate(90);
+		pilot.rotate(90);
+		Button.waitForAnyPress();
+		/*
+		 * grabMotor.setSpeed(50); 
+		 * grabMotor.rotateTo(90, true); 
+		 * float minrange = 300, range, mindeg = 0; 
+		 * while (grabMotor.isMoving()) { 
+		 * 	if ((range = usSensor.getRange()) < minrange) { 
+		 * 		minrange = range; 
+		 * 		mindeg = grabMotor.getTachoCount();
+		 * 	} 
+		 * } 
+		 * pilot.rotate(mindeg);
+		 * grabMotor.lookAhead();
+		 */
 	}
 }
