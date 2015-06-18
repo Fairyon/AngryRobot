@@ -2,6 +2,7 @@ import lejos.nxt.*;
 
 public class Main {
   
+  protected final static int minimalDelta = 4;
   protected final static int usLimit = 160; // limit for us in cm
   
 	protected final static int width = 114; // every cm

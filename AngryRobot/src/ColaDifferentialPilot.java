@@ -3,7 +3,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 
 public class ColaDifferentialPilot extends DifferentialPilot {
 
-  private static double rotationFactor = 1.008;
+  private static double rotationFactor = 1.01;
   private static double travelFactor = 1.037;
 
   public ColaDifferentialPilot(double wheelDiameter, double trackWidth,

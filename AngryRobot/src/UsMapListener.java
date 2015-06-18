@@ -1,10 +1,12 @@
-import lejos.nxt.*;
+import lejos.nxt.SensorPort;
+import lejos.nxt.SensorPortListener;
 
 public class UsMapListener implements SensorPortListener {
+
 	private static Point refVector = new Point(1, 0);
+	private static Map map;
 
 	private ColaBot robot;
-	private Map map;
 
 	public UsMapListener(ColaBot robot, Map map) {
 		if (robot == null)
@@ -13,7 +15,6 @@ public class UsMapListener implements SensorPortListener {
 			throw new NullPointerException("map null");
 
 		this.robot = robot;
-		this.map = map;
 	}
 
 	@Override

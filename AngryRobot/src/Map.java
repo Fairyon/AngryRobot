@@ -13,7 +13,7 @@ public class Map {
   }
 
   public byte getValue(Point point) throws ArrayIndexOutOfBoundsException {
-    return getValue((int)point.x, (int)point.y);
+    return getValue((int)point.getX(), (int)point.getY());
   }
 
   public byte getValue(int x, int y) throws ArrayIndexOutOfBoundsException {
@@ -21,7 +21,7 @@ public class Map {
   }
 
   public void increment(Point point) throws ArrayIndexOutOfBoundsException {
-    increment((int)point.x, (int)point.y);
+    increment((int)point.getX(), (int)point.getY());
   }
 
   public void increment(int x, int y) throws ArrayIndexOutOfBoundsException {
@@ -30,7 +30,7 @@ public class Map {
   }
 
   public void decrement(Point point) throws ArrayIndexOutOfBoundsException {
-    decrement((int)point.x, (int)point.y);
+    decrement((int)point.getX(), (int)point.getY());
   }
 
   public void decrement(int x, int y) throws ArrayIndexOutOfBoundsException {
@@ -39,7 +39,7 @@ public class Map {
   }
 
   public void reset(Point point) throws ArrayIndexOutOfBoundsException {
-    reset((int)point.x, (int)point.y);
+    reset((int)point.getX(), (int)point.getY());
   }
 
   public void reset(int x, int y) throws ArrayIndexOutOfBoundsException {
@@ -113,8 +113,8 @@ public class Map {
           continue;
 
         Point size = getSize(x, y);
-        if (size.x >= Main.candiam - 2 && size.x <= Main.candiam
-            && size.y >= Main.candiam - 2 && size.y <= Main.candiam) {
+        if (size.getX() >= Main.candiam - 2 && size.getX() <= Main.candiam
+            && size.getY() >= Main.candiam - 2 && size.getY() <= Main.candiam) {
           System.out.println("Possible can: " + size);
           points.add(new Point(x, y));
         }

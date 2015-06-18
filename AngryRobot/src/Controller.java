@@ -10,7 +10,7 @@ public class Controller extends Thread {
 	public void run() {
 	  robot.init();
 	  robot.usSensor.addSensorPortListener(new UsMapListener(robot, map));
-	  robot.test();
+	 // robot.test();
 	  
 	  /*
 		try {
