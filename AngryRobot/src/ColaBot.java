@@ -1,29 +1,21 @@
-import lejos.nxt.Button;
-import lejos.nxt.LightSensor;
-import lejos.nxt.NXTRegulatedMotor;
-import lejos.nxt.TouchSensor;
-import lejos.nxt.comm.RConsole;
-import lejos.robotics.RegulatedMotor;
-import lejos.robotics.navigation.DifferentialPilot;
-import lejos.robotics.navigation.Move;
-import lejos.robotics.navigation.MoveListener;
-import lejos.robotics.navigation.MoveProvider;
+import lejos.nxt.*;
+import lejos.robotics.*;
+import lejos.robotics.navigation.*;
 
 public class ColaBot {
+  private static final float distanceFactor = 0.09639f;
+  private static final float rotationFactor = 0.995f;
 
-  private final float distanceFactor = 0.09639f;
-  private final float rotationFactor = 0.995f;
   private final DifferentialPilot pilot;
-  protected final RegulatedMotor leftMotor;
-  protected final RegulatedMotor rightMotor;
-  protected final GrabMotor grabMotor;
-  protected final LightSensor lightSensor;
-  protected final TouchSensor canTouchSensor;
-  protected final ColaUltrasonicSensor usSensor;
+  private final RegulatedMotor leftMotor;
+  private final RegulatedMotor rightMotor;
+  private final GrabMotor grabMotor;
+  private final LightSensor lightSensor;
+  private final TouchSensor canTouchSensor;
+  private final ColaUltrasonicSensor usSensor;
 
-  protected Point curpos;
-  protected Point usPosition;
-  protected float curangle;
+  private Point curpos;
+  private float curangle;
 
   private boolean isMoving;
 
@@ -34,7 +26,8 @@ public class ColaBot {
     this.lightSensor = new LightSensor(Main.lightSensorPort);
     this.canTouchSensor = new TouchSensor(Main.canTouchSensorPort);
     this.usSensor = new ColaUltrasonicSensor(Main.usSensorPort);
-    this.pilot = new ColaDifferentialPilot(56, 142 - 26, leftMotor, rightMotor);
+    this.pilot = new ColaDifferentialPilot(56, 142 - 26, leftMotor,
+        rightMotor);
 
     curpos = new Point(20, 20);
     curangle = 0;
@@ -44,6 +37,10 @@ public class ColaBot {
     usSensor.continuous();
     lightSensor.setFloodlight(true);
     pilot.addMoveListener(new PositionKeeper());
+    // calibrate();
+
+    pilot.setRotateSpeed(75);
+    pilot.setTravelSpeed(150);
   }
 
   public void stop() {
@@ -53,10 +50,68 @@ public class ColaBot {
     usSensor.off();
   }
 
+  public void addUsSensorPortListener(SensorPortListener listener) {
+    if (listener == null)
+      throw new NullPointerException("listener is null");
+
+    usSensor.addSensorPortListener(listener);
+  }
+
   /**
-   * @param corner
-   * @return
+   * Resets the position of the ultrasonic sensor
    */
+  public void resetUsRotation() {
+    grabMotor.lookAhead();
+  }
+
+  /**
+   * Rotates the ultrasonic sensor to the specified angle
+   * 
+   * @param angle
+   *            Angle to rotate the ultrasonic sensor
+   */
+  public void rotateUsTo(int angle) {
+    if (Math.abs(angle) > 90)
+      throw new IllegalArgumentException("invalid angle " + angle);
+
+    grabMotor.rotateTo(angle);
+  }
+
+  public int getUsDistance() {
+    return usSensor.getDistance();
+  }
+
+  /**
+   * Lets the robot travel a specified range
+   * 
+   * @param distance
+   *            Range to travel
+   * @param immediateReturn
+   *            If true this method returns immediately
+   */
+  public void travel(double distance, boolean immediateReturn) {
+    pilot.travel(distance, immediateReturn);
+  }
+
+  /**
+   * Lets the robot travel a specified range
+   * 
+   * @param distance
+   *            Range to travel
+   */
+  public void travel(double distance) {
+    travel(distance, false);
+  }
+
+  /**
+   * Check if the sensor is pressed
+   * 
+   * @return true if sensor is pressed, false otherwise
+   */
+  public boolean isTouchSensorPressed() {
+    return canTouchSensor.isPressed();
+  }
+
   public boolean[] calibrate(int corner) {
     if(pilot.isMoving()||pilot.isStalled()) return null;
     int obstacleGeer = 0;
@@ -173,16 +228,16 @@ public class ColaBot {
     switch(corner){
       case 0: // top right
         if(side){ // right
-          curpos.setX(Main.length-dist-Main.grabberlen);
+          curpos.setX(Main.mapLength-dist-Main.grabberlen);
           curangle = -angle;
         } else {
-          curpos.setY(Main.width-dist-Main.grabberlen);
+          curpos.setY(Main.mapWidth-dist-Main.grabberlen);
           curangle = 90-angle;
         }
         break;
       case 1: // top left
         if(side){ // right
-          curpos.setY(Main.width-dist-Main.grabberlen);
+          curpos.setY(Main.mapWidth-dist-Main.grabberlen);
           curangle = 90-angle;
         } else {
           curpos.setX(dist+Main.grabberlen);
@@ -203,7 +258,7 @@ public class ColaBot {
           curpos.setY(dist+Main.grabberlen);
           curangle = 270-angle;
         } else {
-          curpos.setX(Main.length-dist-Main.grabberlen);
+          curpos.setX(Main.mapLength-dist-Main.grabberlen);
           curangle = -angle;
         }
         break;
@@ -216,11 +271,11 @@ public class ColaBot {
     if (isMoving) {
       Move event = pilot.getMovement();
       if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
-        return curpos.pointAt(Main.distToEyes, Main.angleToEyes + curangle
-            + event.getAngleTurned());
+        return curpos.pointAt(Main.distToEyes, Main.angleToEyes
+            + curangle + event.getAngleTurned());
       } else {
-        return curpos.pointAt(event.getDistanceTraveled(), curangle).pointAt(
-            Main.distToEyes, Main.angleToEyes + curangle);
+        return curpos.pointAt(event.getDistanceTraveled(), curangle)
+            .pointAt(Main.distToEyes, Main.angleToEyes + curangle);
       }
 
     } else {
@@ -265,17 +320,67 @@ public class ColaBot {
     }
   }
 
-  protected Point lookForCan() {
-    // TODO Richtigen Punkt zurueckgeben
-    return new Point(0, 0);
+  /**
+   * true if the robot is moving
+   * 
+   * @return true if the robot is moving
+   */
+  public boolean isMoving() {
+    return pilot.isMoving();
   }
 
-  public void travelToCan() {
-
+  /**
+   * Rotates the robot through a specific angle
+   * 
+   * @param angle
+   *            The wanted angle of rotation in degrees. Positive angle rotate
+   *            left (anti-clockwise), negative right.
+   * @param immediateReturn
+   *            If true this method returns immediately.
+   */
+  public void rotate(float angle, boolean immediateReturn) {
+    pilot.rotate(angle, immediateReturn);
   }
 
-  protected void getCan() {
+  /**
+   * Rotates the robot through a specific angle
+   * 
+   * @param angle
+   *            The wanted angle of rotation in degrees. Positive angle rotate
+   *            left (anti-clockwise), negative right.
+   */
+  public void rotate(float angle) {
+    rotate(angle, false);
+  }
 
+  /**
+   * Rotates the robot to the specific angle
+   * 
+   * @param angle
+   *            The wanted angle of the robot after the rotation in degrees
+   * @param immediateReturn
+   *            If true this method returns immediately.
+   */
+  public void rotateTo(float angle, boolean immediateReturn) {
+    float absoluteAngle = angle - getAngle();
+    pilot.rotate(absoluteAngle, immediateReturn);
+  }
+
+  /**
+   * Rotates the robot to the specific angle
+   * 
+   * @param angle
+   *            The wanted angle of the robot after the rotation in degrees
+   */
+  public void rotateTo(float angle) {
+    rotateTo(angle, false);
+  }
+
+  /**
+   * Stops the robots movement
+   */
+  public void stopMovement() {
+    pilot.stop();
   }
 
   private class PositionKeeper implements MoveListener {
@@ -288,10 +393,9 @@ public class ColaBot {
     public void moveStopped(Move event, MoveProvider mp) {
       if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
         curangle += event.getAngleTurned() * rotationFactor;
-        if(curangle<-180) curangle+=360;
-        else if(curangle>180) curangle-=360;
       } else {
-        curpos.moveAt(event.getDistanceTraveled() * distanceFactor, curangle);
+        curpos.moveAt(event.getDistanceTraveled() * distanceFactor,
+            curangle);
       }
       isMoving = false;
     }
@@ -308,15 +412,9 @@ public class ColaBot {
     pilot.rotate(90);
     pilot.rotate(90);
     Button.waitForAnyPress();
-    pilot.rotate(-90);
-    // pilot.travel(-1000);
-    pilot.rotate(-90);
-    pilot.rotate(-90);
-    pilot.rotate(-90);
-    Button.waitForAnyPress();
     /*
-     * grabMotor.setSpeed(50); grabMotor.rotateTo(90, true); float minrange =
-     * 300, range, mindeg = 0; while (grabMotor.isMoving()) { if ((range =
+     * grabMotor.setSpeed(50); grabMotor.rotateTo(90, true); float minrange
+     * = 300, range, mindeg = 0; while (grabMotor.isMoving()) { if ((range =
      * usSensor.getRange()) < minrange) { minrange = range; mindeg =
      * grabMotor.getTachoCount(); } } pilot.rotate(mindeg);
      * grabMotor.lookAhead();

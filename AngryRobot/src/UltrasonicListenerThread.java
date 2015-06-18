@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * Hilfsklasse zur Weiterleitung von Events an SensorPortListeners
  */
 public class UltrasonicListenerThread extends Thread {
-	private static final int pause = 50;
+	private static final int pause = 25;
 	private static UltrasonicListenerThread singleton = null;
 
 	/**

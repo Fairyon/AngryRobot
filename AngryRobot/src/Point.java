@@ -140,4 +140,24 @@ public class Point {
   public Point clone() {
     return new Point(this.x, this.y);
   }
+  
+  public float getLength() {
+    return (float) Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+  }
+
+  public float getDistance(Point other) {
+    Point vector = new Point(this.x - other.x, this.y - other.y);
+    return vector.getLength();
+  }
+
+  public float getAngleBetween(Point other, boolean degrees) {
+    double scalar = this.x * other.x + this.y * other.y;
+    double norms = this.getLength() * other.getLength();
+    double cos = scalar / norms;
+    double angle = Math.acos(cos);
+
+    if (degrees)
+      return (float) Math.toDegrees(angle);
+    return (float) angle;
+  }
 }

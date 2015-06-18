@@ -21,25 +21,26 @@ public class UsMapListener implements SensorPortListener {
 	public void stateChanged(SensorPort source, int oldValue, int newValue) {
 		Point pos = robot.getUsPosition();
 		float angle = robot.getUSAngle();
-		int distance = robot.usSensor.getDistance();
-		//System.out.print(distance+" ");
+		int distance = robot.getUsDistance();
+		// System.out.print(distance+" ");
 
 		Point direction = Point.getDirectionVector(1, angle);
 		Point destination = pos.clone();
-		
+
 		int i = distance;
-		
-		if(distance > Main.usLimit) distance = Main.usLimit;
-		
-		try{
-  		while (i-- > 0) {
-  		  destination.moveBy(direction);
-  	    map.decrement(destination);
-  		}
-  		destination.moveBy(direction);
-  		map.increment(destination);
-		} catch (ArrayIndexOutOfBoundsException e){
-		  //TODO Rekalibrierung
+
+		if (distance > Main.usLimit)
+			distance = Main.usLimit;
+
+		try {
+			while (i-- > 0) {
+				destination.moveBy(direction);
+				map.decrement(destination);
+			}
+			destination.moveBy(direction);
+			map.increment(destination);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// TODO Rekalibrierung
 		}
 	}
 }
