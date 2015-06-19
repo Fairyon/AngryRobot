@@ -374,7 +374,7 @@ public class ColaBot {
 	 */
 	public void rotateTo(float absoluteAngle, boolean withCan,
 			boolean immediateReturn) {
-		float relativeAngle = (absoluteAngle - getAngle() + 360) % 360;
+		float relativeAngle = absoluteAngle - getAngle();
 		if (withCan)
 			relativeAngle *= Main.canRotFactor;
 		pilot.rotate(relativeAngle, immediateReturn);
@@ -470,31 +470,38 @@ public class ColaBot {
 		int bestRange = 255;
 		float bestAngle = 0;
 		boolean isObject = false;
-		float rotated;
+		float angle, newAngle;
 		int newRange;
 		int delta;
 		int range = getUsDistance();
+		angle = grabMotor.getTachoCount();
 		grabMotor.rotateTo(startAngle);
 		grabMotor.rotateTo(endAngle, true);
 		while (grabMotor.isMoving()) {
 			newRange = getUsDistance();
+			newAngle = grabMotor.getTachoCount();
 			delta = range - newRange;
 			if (delta > Main.minimalDelta) {
-				//if ((newRange == 24 || newRange == 23) && (range == 14 || range == 13))
-				//	continue;
+				if ((newRange == 24 || newRange == 23) && (range == 14 || range == 13))
+					continue;
 				isObject = true;
 				Sound.beepSequenceUp();
-				rotated = getUSAngle();
 				if (newRange < bestRange) {
 					Sound.beepSequence();
 					bestRange = newRange;
-					bestAngle = rotated;
+					bestAngle = (angle+newAngle)/2;
 				}
 			}
 			range = newRange;
+			angle = newAngle;
 		}
 		grabMotor.lookAhead();
 		if (isObject) {
+			bestAngle += getAngle();
+			if (bestAngle < -180)
+				bestAngle += 360;
+			else if (bestAngle > 180)
+				bestAngle -= 360;
 			return new Polar(getDistToObject(bestRange, bestAngle), bestAngle);
 		}
 		return null;
