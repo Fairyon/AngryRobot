@@ -5,6 +5,7 @@ public class Point {
     float y = (float) (distance * Math.sin(Math.toRadians(angle)));
     return new Point(x, y);
   }
+  
   /**
    * The x coordinate of the point
    */
@@ -142,6 +143,18 @@ public class Point {
   }
   
   public float getLength() {
+    return getLength(this.x, this.y);
+  }
+  
+  public Point getDirectionTo(Point p){
+    return new Point(p.x-this.x,p.y-this.y);
+  }
+  
+  public Point addTo(Point p){
+    return new Point(p.x+this.x,p.y+this.y);
+  }
+  
+  public static float getLength(float x, float y) {
     return (float) Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
   }
 
@@ -153,6 +166,17 @@ public class Point {
   public float getAngleBetween(Point other, boolean degrees) {
     double scalar = this.x * other.x + this.y * other.y;
     double norms = this.getLength() * other.getLength();
+    double cos = scalar / norms;
+    double angle = Math.acos(cos);
+
+    if (degrees)
+      return (float) Math.toDegrees(angle);
+    return (float) angle;
+  }
+  
+  public float getAngleTo(Point other, boolean degrees) {
+    double scalar = (this.x-other.x)*(this.x-other.x);
+    double norms = getLength(this.x-other.x, this.y-other.y) * getLength(this.x-other.x, 0);
     double cos = scalar / norms;
     double angle = Math.acos(cos);
 

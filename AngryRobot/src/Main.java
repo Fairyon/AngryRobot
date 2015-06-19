@@ -3,8 +3,9 @@ import lejos.nxt.comm.RConsole;
 
 public class Main {
   
-  protected final static int minimalDelta = 4;
+  protected final static int minimalDelta = 6;
 
+  protected final static float canRotFactor = 1.98f;
   protected final static int usLimit = 160; // limit for us in cm
 
   protected final static int mapWidth = 114; // every mm
@@ -26,25 +27,25 @@ public class Main {
   protected final static int rotationSpeed = 200;
 
   public static void main(String[] args) {
-    RConsole.openUSB(0);
+    /*RConsole.openUSB(0);
     if (RConsole.isOpen()) {
       System.setOut(RConsole.getPrintStream());
       System.setErr(RConsole.getPrintStream());
-    }
+    }*/
 
-    try {
-      // Button.waitForAnyPress();
+    //try {
+       Button.waitForAnyPress();
 
       Controller c = new Controller();
       c.start();
 
       Button.waitForAnyPress();
       c.stop();
-    } finally {
+    /*} finally {
       if (RConsole.isOpen()) {
         RConsole.close();
       }
-    }
+    }*/
 
     System.exit(0);
   }

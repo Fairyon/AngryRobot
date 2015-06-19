@@ -189,7 +189,7 @@ public class Controller extends Thread {
 
         // Find angle with lowest distance
         float targetAngle = turnToObject(newDistance, rotated);
-        robot.rotateTo(targetAngle);
+        robot.rotateTo(targetAngle,false);
 
         // returns direction to possible can
         return Point.getDirectionVector(robot.getUsDistance(), 0);
@@ -205,15 +205,16 @@ public class Controller extends Thread {
 
   public void run() {
     robot.init();
+    robot.findCan();
     // robot.addUsSensorPortListener(usListener);
-    // robot.test();
+    //robot.test();
 
-    while (!isInterrupted()) {
+    /*while (!isInterrupted()) {
       if (findCan()) {
         Sound.beepSequenceUp();
         Button.waitForAnyPress();
       }
-    }
+    }*/
 
     /*
      * try { // robot.rangecalibration();

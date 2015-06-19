@@ -5,6 +5,8 @@ import lejos.robotics.navigation.*;
 public class ColaBot {
   private static final float distanceFactor = 0.09639f;
   private static final float rotationFactor = 0.995f;
+  
+  private static final Point homePosition = new Point(20,20);
 
   private final DifferentialPilot pilot;
   private final RegulatedMotor leftMotor;
@@ -37,7 +39,6 @@ public class ColaBot {
     usSensor.continuous();
     lightSensor.setFloodlight(true);
     pilot.addMoveListener(new PositionKeeper());
-    // calibrate();
 
     pilot.setRotateSpeed(75);
     pilot.setTravelSpeed(150);
@@ -79,6 +80,13 @@ public class ColaBot {
 
   public int getUsDistance() {
     return usSensor.getDistance();
+  }
+  
+  public int getDistToObject(int usRange, float usAngle){
+    Point usPos = getUsPosition();
+    Point r1 = curpos.getDirectionTo(usPos);
+    Point r2 = Point.getDirectionVector(usRange, usAngle);
+    return (int) r1.addTo(r2).getLength();
   }
 
   /**
@@ -361,9 +369,10 @@ public class ColaBot {
    * @param immediateReturn
    *            If true this method returns immediately.
    */
-  public void rotateTo(float angle, boolean immediateReturn) {
-    float absoluteAngle = angle - getAngle();
-    pilot.rotate(absoluteAngle, immediateReturn);
+  public void rotateTo(float absoluteAngle, boolean withCan, boolean immediateReturn) {
+    float relativeAngle = (absoluteAngle - getAngle() + 360) %360;
+    if(withCan) relativeAngle*=Main.canRotFactor;
+    pilot.rotate(relativeAngle, immediateReturn);
   }
 
   /**
@@ -372,8 +381,8 @@ public class ColaBot {
    * @param angle
    *            The wanted angle of the robot after the rotation in degrees
    */
-  public void rotateTo(float angle) {
-    rotateTo(angle, false);
+  public void rotateTo(float absoluteAngle, boolean withCan) {
+    rotateTo(absoluteAngle, withCan, false);
   }
 
   /**
@@ -401,17 +410,88 @@ public class ColaBot {
     }
 
   }
+  
+  protected void findCan(){
+    System.out.println("findCan");
+    int canRange = lookForCan();
+    boolean canFound = false;
+    if(canRange<0) return;
+ // Total distance between robot and can
+    double totalLen = canRange;
+    travel(totalLen * 10 - 200 - Main.grabberlen);
+    canRange = lookForCan();
+    System.out.println(canRange);
+    rotate(10);
+    pilot.travel(canRange+50, true);
+    while(pilot.isMoving()){
+      if(canTouchSensor.isPressed()){
+        System.out.println("touched");
+        canFound = true;
+        break;
+      }
+    }
+    if(!canFound) findCan();
+    else {
+      pilot.stop();
+      float homeAngle = curpos.getAngleTo(homePosition, true) + 180;
+      System.out.println("homeAngle" + homeAngle);
+      rotateTo(homeAngle,true);
+      travel(curpos.getDistance(homePosition)*10);
+    }
+  }
+  
+  protected int lookForCan(){
+    pilot.setRotateSpeed(100);
+    pilot.setTravelSpeed(150);
+    grabMotor.setSpeed(50); 
+    int bestRange = 255;
+    float bestAngle = 0;
+    boolean isObject = false;
+    float rotated=0;
+    float rotationDiff=0;
+    int newRange = -1;
+    int delta;
+    int range = getUsDistance();
+    grabMotor.rotateTo(90, true); 
+    while (grabMotor.isMoving()) { 
+      newRange = getUsDistance();
+      delta = range - newRange;
+      if (delta > Main.minimalDelta) {
+        if((newRange==24||newRange==23)&&(range==14||range==13)) continue;
+        isObject = true;
+        rotated = getUSAngle();
+        if(newRange<bestRange){
+          Sound.beepSequenceUp();
+          System.out.println("Found: "+newRange);
+          bestRange = newRange;
+          bestAngle = rotated;
+        }
+      }
+      range=newRange;
+    }
+    if(isObject){
+      grabMotor.lookAhead();
+      int distToObject=getDistToObject(bestRange, bestAngle);
+      rotateTo(bestAngle-15, false);
+      return distToObject;
+    }
+    return -1;
+  }
 
   protected void test() {
+    float factor = 2;
     pilot.setRotateSpeed(100);
     pilot.setTravelSpeed(150);
     // pilot.travel(1000);
-    pilot.rotate(90);
+    pilot.rotate(factor*90);
     // pilot.travel(-1000);
-    pilot.rotate(90);
-    pilot.rotate(90);
-    pilot.rotate(90);
-    Button.waitForAnyPress();
+    pilot.rotate(factor*90);
+    pilot.rotate(factor*90);
+    pilot.rotate(factor*90);
+    //Button.waitForAnyPress();
+      /*while(!canTouchSensor.isPressed());
+      System.out.println("Pressed!!!");
+      Sound.beepSequenceUp();*/
     /*
      * grabMotor.setSpeed(50); grabMotor.rotateTo(90, true); float minrange
      * = 300, range, mindeg = 0; while (grabMotor.isMoving()) { if ((range =
