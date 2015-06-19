@@ -561,12 +561,12 @@ public class ColaBot {
 		float factor = 2;
 		pilot.setRotateSpeed(100);
 		pilot.setTravelSpeed(150);
-		// pilot.travel(1000);
-		pilot.rotate(factor * 90);
-		// pilot.travel(-1000);
-		pilot.rotate(factor * 90);
-		pilot.rotate(factor * 90);
-		pilot.rotate(factor * 90);
+		// travel(1000);
+		rotate(factor * 90);
+		// travel(-1000);
+		rotate(factor * 90);
+		rotate(factor * 90);
+		rotate(factor * 90);
 		// Button.waitForAnyPress();
 		/*
 		 * while(!canTouchSensor.isPressed()); System.out.println("Pressed!!!");
@@ -576,7 +576,7 @@ public class ColaBot {
 		 * grabMotor.setSpeed(50); grabMotor.rotateTo(90, true); float minrange
 		 * = 300, range, mindeg = 0; while (grabMotor.isMoving()) { if ((range =
 		 * usSensor.getRange()) < minrange) { minrange = range; mindeg =
-		 * grabMotor.getTachoCount(); } } pilot.rotate(mindeg);
+		 * grabMotor.getTachoCount(); } } rotate(mindeg);
 		 * grabMotor.lookAhead();
 		 */
 	}
