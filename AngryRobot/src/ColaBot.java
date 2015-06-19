@@ -38,7 +38,6 @@ public class ColaBot {
 		usSensor.continuous();
 		lightSensor.setFloodlight(true);
 		pilot.addMoveListener(new PositionKeeper());
-
 		pilot.setRotateSpeed(75);
 		pilot.setTravelSpeed(150);
 	}
@@ -416,20 +415,27 @@ public class ColaBot {
 
 	}
 
-	protected void findCan() {
-		System.out.println("findCan");
-		Polar canRange = lookForCan();
-		boolean canFound = false;
-		if (canRange.getDistance() < 0)
-			return;
+	protected boolean findCan() {
+		final int recheckDistance = 15; // cm
+		Polar canPolar = lookForCan(0, 90);
 		// Total distance between robot and can
-		double totalLen = canRange.getDistance();
-		travel(totalLen * 10 - 200 - Main.grabberlen);
-		canRange = lookForCan();
-		System.out.println(canRange);
-		rotate(10);
-		pilot.travel(totalLen + 50, true);
-		while (pilot.isMoving()) {
+		if (canPolar == null) return false; //TODO fahren zu anderen position
+		
+		boolean canFound = false;
+		rotateTo(canPolar.getAngle(), false);
+		while(canPolar.getDistance()>recheckDistance*2){
+			travel(recheckDistance*10);
+			canPolar = lookForCan(-45, 45);
+			if (canPolar == null) return false; 
+			rotateTo(canPolar.getAngle(), false);
+		}
+		canPolar = lookForCan(-45, 45);
+		if (canPolar == null) return false; 
+		rotateTo(canPolar.getAngle(), false);
+		System.out.println("fertig");
+		
+		
+		/*while (pilot.isMoving()) {
 			if (canTouchSensor.isPressed()) {
 				System.out.println("touched");
 				canFound = true;
@@ -444,10 +450,20 @@ public class ColaBot {
 			System.out.println("homeAngle" + homeAngle);
 			rotateTo(homeAngle, true);
 			travel(curpos.getDistance(homePosition) * 10);
-		}
+		}*/
+		return true;
+	}
+	protected Polar lookForCan() {
+		return lookForCan(0, 90);
 	}
 
-	protected Polar lookForCan() {
+	/**
+	 * 
+	 * @param startAngle
+	 * @param endAngle
+	 * @return Polar with distance and angle to the next can relative to robot
+	 */
+	protected Polar lookForCan(int startAngle, int endAngle) {
 		pilot.setRotateSpeed(100);
 		pilot.setTravelSpeed(150);
 		grabMotor.setSpeed(50);
@@ -458,28 +474,28 @@ public class ColaBot {
 		int newRange;
 		int delta;
 		int range = getUsDistance();
-		grabMotor.rotateTo(90, true);
+		grabMotor.rotateTo(startAngle);
+		grabMotor.rotateTo(endAngle, true);
 		while (grabMotor.isMoving()) {
 			newRange = getUsDistance();
 			delta = range - newRange;
 			if (delta > Main.minimalDelta) {
-				if ((newRange == 24 || newRange == 23) && (range == 14 || range == 13))
-					continue;
+				//if ((newRange == 24 || newRange == 23) && (range == 14 || range == 13))
+				//	continue;
 				isObject = true;
+				Sound.beepSequenceUp();
 				rotated = getUSAngle();
 				if (newRange < bestRange) {
-					Sound.beepSequenceUp();
+					Sound.beepSequence();
 					bestRange = newRange;
 					bestAngle = rotated;
 				}
 			}
 			range = newRange;
 		}
+		grabMotor.lookAhead();
 		if (isObject) {
-			grabMotor.lookAhead();
-			int distToObject = getDistToObject(bestRange, bestAngle);
-			rotateTo(bestAngle - 15, false);
-			return new Polar(distToObject, bestAngle);
+			return new Polar(getDistToObject(bestRange, bestAngle), bestAngle);
 		}
 		return null;
 	}
