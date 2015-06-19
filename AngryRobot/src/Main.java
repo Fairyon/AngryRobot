@@ -8,8 +8,8 @@ public class Main {
 	protected final static float canRotFactor = 1.98f;
 	protected final static int usLimit = 160; // limit for us in cm
 
-	protected final static int mapWidth = 114; // every mm
-	protected final static int mapLength = 240; // every mm
+	protected final static int mapHeight = 114; // every mm
+	protected final static int mapWidth = 240; // every mm
 	protected final static int candiam = 7; // size in cm
 	protected final static int grabberlen = 13; // size in cm
 	protected final static int distToEyes = 14; // distance in cm
