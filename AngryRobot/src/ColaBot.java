@@ -413,16 +413,16 @@ public class ColaBot {
   
   protected void findCan(){
     System.out.println("findCan");
-    int canRange = lookForCan();
+    Polar canRange = lookForCan();
     boolean canFound = false;
-    if(canRange<0) return;
+    if(canRange.getDistance()<0) return;
  // Total distance between robot and can
-    double totalLen = canRange;
+    double totalLen = canRange.getDistance();
     travel(totalLen * 10 - 200 - Main.grabberlen);
     canRange = lookForCan();
     System.out.println(canRange);
     rotate(10);
-    pilot.travel(canRange+50, true);
+    pilot.travel(totalLen+50, true);
     while(pilot.isMoving()){
       if(canTouchSensor.isPressed()){
         System.out.println("touched");
@@ -440,16 +440,15 @@ public class ColaBot {
     }
   }
   
-  protected int lookForCan(){
+  protected Polar lookForCan(){
     pilot.setRotateSpeed(100);
     pilot.setTravelSpeed(150);
     grabMotor.setSpeed(50); 
     int bestRange = 255;
     float bestAngle = 0;
     boolean isObject = false;
-    float rotated=0;
-    float rotationDiff=0;
-    int newRange = -1;
+    float rotated;
+    int newRange;
     int delta;
     int range = getUsDistance();
     grabMotor.rotateTo(90, true); 
@@ -462,7 +461,6 @@ public class ColaBot {
         rotated = getUSAngle();
         if(newRange<bestRange){
           Sound.beepSequenceUp();
-          System.out.println("Found: "+newRange);
           bestRange = newRange;
           bestAngle = rotated;
         }
@@ -471,11 +469,11 @@ public class ColaBot {
     }
     if(isObject){
       grabMotor.lookAhead();
-      int distToObject=getDistToObject(bestRange, bestAngle);
+      int distToObject = getDistToObject(bestRange, bestAngle);
       rotateTo(bestAngle-15, false);
-      return distToObject;
+      return new Polar(distToObject, bestAngle);
     }
-    return -1;
+    return null;
   }
 
   protected void test() {
