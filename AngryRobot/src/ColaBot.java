@@ -97,6 +97,13 @@ public class ColaBot {
 		return (int) r1.addTo(r2).getLength();
 	}
 
+	private boolean isValidPoint(Point p) {
+		float tarX = p.getX();
+		float tarY = p.getY();
+
+		return tarX >= minX && tarX <= maxX && tarY >= minY && tarY <= maxY;
+	}
+
 	/**
 	 * Lets the robot travel a specified range
 	 * 
@@ -108,23 +115,17 @@ public class ColaBot {
 	public void travel(double distance, boolean immediateReturn) {
 		Point target;
 		Point position = getPosition();
-		float tarX, tarY;
 		float angle = getAngle();
 
 		// TODO Infinite loop if location is already too close to the wall
 		double tmpDistance = distance / 10;
 		do {
 			target = position.pointAt((float) tmpDistance, angle);
-			tarX = target.getX();
-			tarY = target.getY();
-
-			// System.out.println(target);
-			if (tarX < minX || tarX > maxX || tarY < minY || tarY > maxY) {
-				// Sound.beep();
-				tmpDistance--;
-			} else {
+			if (isValidPoint(target)) {
 				distance = 10 * tmpDistance;
 				break;
+			} else {
+				tmpDistance--;
 			}
 		} while (true);
 
@@ -386,8 +387,23 @@ public class ColaBot {
 	 * @param immediateReturn
 	 *            If true this method returns immediately.
 	 */
-	public void rotate(float angle, boolean immediateReturn) {
-		pilot.rotate(angle, immediateReturn);
+	public boolean rotate(float angle, boolean immediateReturn) {
+		Point botPosition = getPosition();
+		Point targetUsPos = botPosition.pointAt(Main.distToEyes,
+				Main.angleToEyes + curangle + angle);
+
+		boolean result = isValidPoint(targetUsPos);
+		if(result) 
+			pilot.rotate(angle, immediateReturn);
+		else {
+			System.out.println();
+			System.out.println("rotate failed");
+			System.out.println("angle: " + angle);
+			System.out.println("eyepos: " + targetUsPos);
+			System.out.println();
+		}
+		
+		return result;
 	}
 
 	/**
@@ -397,8 +413,8 @@ public class ColaBot {
 	 *            The wanted angle of rotation in degrees. Positive angle rotate
 	 *            left (anti-clockwise), negative right.
 	 */
-	public void rotate(float angle) {
-		rotate(angle, false);
+	public boolean rotate(float angle) {
+		return rotate(angle, false);
 	}
 
 	/**
@@ -409,12 +425,12 @@ public class ColaBot {
 	 * @param immediateReturn
 	 *            If true this method returns immediately.
 	 */
-	public void rotateTo(float absoluteAngle, boolean withCan,
+	public boolean rotateTo(float absoluteAngle, boolean withCan,
 			boolean immediateReturn) {
 		float relativeAngle = (absoluteAngle - getAngle() + 360) % 360;
 		if (withCan)
 			relativeAngle *= Main.canRotFactor;
-		pilot.rotate(relativeAngle, immediateReturn);
+		return rotate(relativeAngle, immediateReturn);
 	}
 
 	/**
@@ -423,8 +439,8 @@ public class ColaBot {
 	 * @param angle
 	 *            The wanted angle of the robot after the rotation in degrees
 	 */
-	public void rotateTo(float absoluteAngle, boolean withCan) {
-		rotateTo(absoluteAngle, withCan, false);
+	public boolean rotateTo(float absoluteAngle, boolean withCan) {
+		return rotateTo(absoluteAngle, withCan, false);
 	}
 
 	/**
@@ -457,38 +473,32 @@ public class ColaBot {
 		final int recheckDistance = 15; // cm
 		Polar canPolar = lookForCan(0, 90);
 		// Total distance between robot and can
-		if (canPolar == null) return false; //TODO fahren zu anderen position
-		
+		if (canPolar == null)
+			return false; // TODO fahren zu anderen position
+
 		boolean canFound = false;
 		rotateTo(canPolar.getAngle(), false);
-		while(canPolar.getDistance()>recheckDistance*2){
-			travel(recheckDistance*10);
+		while (canPolar.getDistance() > recheckDistance * 2) {
+			travel(recheckDistance * 10);
 			canPolar = lookForCan(-45, 45);
-			if (canPolar == null) return false; 
+			if (canPolar == null)
+				return false;
 			rotateTo(canPolar.getAngle(), false);
 		}
 		canPolar = lookForCan(-45, 45);
-		if (canPolar == null) return false; 
+		if (canPolar == null)
+			return false;
 		rotateTo(canPolar.getAngle(), false);
 		System.out.println("fertig");
-		
-		
-		/*while (pilot.isMoving()) {
-			if (canTouchSensor.isPressed()) {
-				System.out.println("touched");
-				canFound = true;
-				break;
-			}
-		}
-		if (!canFound)
-			findCan();
-		else {
-			pilot.stop();
-			float homeAngle = curpos.getAngleTo(homePosition, true) + 180;
-			System.out.println("homeAngle" + homeAngle);
-			rotateTo(homeAngle, true);
-			travel(curpos.getDistance(homePosition) * 10);
-		}*/
+
+		/*
+		 * while (pilot.isMoving()) { if (canTouchSensor.isPressed()) {
+		 * System.out.println("touched"); canFound = true; break; } } if
+		 * (!canFound) findCan(); else { pilot.stop(); float homeAngle =
+		 * curpos.getAngleTo(homePosition, true) + 180;
+		 * System.out.println("homeAngle" + homeAngle); rotateTo(homeAngle,
+		 * true); travel(curpos.getDistance(homePosition) * 10); }
+		 */
 		return true;
 	}
 
@@ -521,14 +531,15 @@ public class ColaBot {
 			newAngle = grabMotor.getTachoCount();
 			delta = range - newRange;
 			if (delta > Main.minimalDelta) {
-				if ((newRange == 24 || newRange == 23) && (range == 14 || range == 13))
+				if ((newRange == 24 || newRange == 23)
+						&& (range == 14 || range == 13))
 					continue;
 				isObject = true;
 				Sound.beepSequenceUp();
 				if (newRange < bestRange) {
 					Sound.beepSequence();
 					bestRange = newRange;
-					bestAngle = (angle+newAngle)/2;
+					bestAngle = (angle + newAngle) / 2;
 				}
 			}
 			range = newRange;
