@@ -38,6 +38,11 @@ public class Point {
 		this.x = (float) x;
 		this.y = (float) y;
 	}
+	
+	public Point(Polar pol) {
+		this.moveAt(pol.getDistance(), pol.getAngle());
+	}
+	
 
 	public float getX() {
 		return x;

@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 import lejos.nxt.*;
 import lejos.robotics.*;
 import lejos.robotics.navigation.*;
@@ -431,7 +433,7 @@ public class ColaBot {
 		}
 		canPolar = lookForCan(-45, 45);
 		if (canPolar == null) return false; 
-		rotateTo(canPolar.getAngle(), false);
+		rotateTo(canPolar.getAngle()-15, false);
 		System.out.println("fertig");
 		
 		
@@ -453,6 +455,12 @@ public class ColaBot {
 		}*/
 		return true;
 	}
+	
+	protected boolean isThereCan(Point canCoord){
+		//grabMotor.rotate(getUsPosition().getDirectionTo(canCoord));
+		return true;
+	}
+	
 	protected Polar lookForCan() {
 		return lookForCan(0, 90);
 	}
@@ -464,16 +472,16 @@ public class ColaBot {
 	 * @return Polar with distance and angle to the next can relative to robot
 	 */
 	protected Polar lookForCan(int startAngle, int endAngle) {
-		pilot.setRotateSpeed(100);
-		pilot.setTravelSpeed(150);
 		grabMotor.setSpeed(50);
-		int bestRange = 255;
+		int bestRange = 150;
 		float bestAngle = 0;
 		boolean isObject = false;
 		float angle, newAngle;
 		int newRange;
 		int delta;
 		int range = getUsDistance();
+		Polar otherCan = lookForCan(grabMotor.getTachoCount(), startAngle);
+		ArrayList<Polar> cans = new ArrayList<Polar>();
 		angle = grabMotor.getTachoCount();
 		grabMotor.rotateTo(startAngle);
 		grabMotor.rotateTo(endAngle, true);

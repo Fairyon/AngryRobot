@@ -13,6 +13,11 @@ public class Polar {
 		this.distance = distance;
 		this.angle = angle;
 	}
+	
+	public Point toVector(){
+		return null;
+		
+	}
 
 	public float getDistance() {
 		return this.distance;
