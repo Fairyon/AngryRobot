@@ -1,4 +1,8 @@
 public class Point {
+	
+	static public Point getMean(Point p1, Point p2){
+		return new Point((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+	}
 
 	static public Point getDirectionVector(float distance, float angle) {
 		float x = (float) (distance * Math.cos(Math.toRadians(angle)));
@@ -37,6 +41,11 @@ public class Point {
 	public Point(double x, double y) {
 		this.x = (float) x;
 		this.y = (float) y;
+	}
+	
+	public Point(Point pos) {
+		this.x = pos.x;
+		this.y = pos.y;
 	}
 	
 	public Point(Polar pol) {
@@ -118,13 +127,18 @@ public class Point {
 		this.x = (float) (distance * Math.cos(Math.toRadians(angle)) + getX());
 		this.y = (float) (distance * Math.sin(Math.toRadians(angle)) + getY());
 	}
+	
+	public void moveTo(float distance, float angle) {
+		this.x = (float) (distance * Math.cos(Math.toRadians(angle)));
+		this.y = (float) (distance * Math.sin(Math.toRadians(angle)));
+	}
 
 	/**
 	 * Represent the Point2SD.Float as a String
 	 */
 	@Override
 	public String toString() {
-		return "(" + this.x + ", " + this.y + ")";
+		return "(" + ((int)this.x) + ", " + ((int)this.y) + ")";
 	}
 
 	/**
@@ -144,7 +158,7 @@ public class Point {
 	}
 
 	public Point clone() {
-		return new Point(this.x, this.y);
+		return new Point(this);
 	}
 
 	public float getLength() {
