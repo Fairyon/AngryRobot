@@ -475,50 +475,140 @@ public class ColaBot {
 		}
 	}
 
-	private boolean canTravel(Point target, Can[] cans) {
+	private boolean canTravel(Point start, Point target, Point[] cans) {
+		System.out.println();
+		System.out.println("enter canTravel");
+		System.out.println("start:" + start);
+		System.out.println("target:" + target);
+		System.out.println("cans:" + cans.length);
+		System.out.println();
+		
 		if (!isValidPoint(target))
 			return false;
 
-		Point position = getPosition();
-		Point direction = new Point(target.getX() - position.getX(),
-				target.getY() - position.getY());
+		Point direction = new Point(target.getX() - start.getX(), target.getY()
+				- start.getY());
 		float length = direction.getLength();
 		Point norm = direction.scalePoint(1 / length);
 
 		for (float t = 0; t <= length; t += 1) {
-			Point cur = position.addTo(norm.scalePoint(t));
+			Point cur = start.addTo(norm.scalePoint(t));
 
 			for (int i = 0; i < cans.length; i++) {
-				Point canPos = cans[i].getPos();
+				Point canPos = cans[i];
 				float dist = canPos.getDistance(cur);
 
-				if (dist <= Main.robotWidth / 2 + Main.candiam)
+				if (dist <= Main.robotWidth / 2 + Main.candiam / 2) {
+					System.out.println("failed at:");
+					System.out.println("cur: " + cur);
+					System.out.println("canPos: " + canPos);
+					System.out.println("dist: " + dist);
+					System.out.println();
+
+					System.out.println("leave canTravel");
+					System.out.println("return false");
+					System.out.println();
+					
 					return false;
+				}
 			}
 		}
 
+		System.out.println("leave canTravel");
+		System.out.println("return true");
+		System.out.println();
+		
 		return true;
 	}
 
 	protected boolean findCan() {
-		Point botPos = getUsPosition();
-		System.out.println("Pos:" + botPos);
-
-		// final int rechteckDistance = 15; // cm
-		ArrayList<Can> cans = lookForCans(0, 90, 4);
-		if (cans == null)
+		Point botPos = getPosition();
+		Point usPos = getUsPosition();
+		ArrayList<Can> canList = lookForCans(0, 90, 4);
+		if (canList == null)
 			return false;
 
-		Can bestCan = cans.get(0);
-		for (int i = 1; i < cans.size(); i++) {
-			if (cans.get(i).getCount() > bestCan.getCount()) {
-				bestCan = cans.get(i);
+		Point[] canPos = new Point[canList.size()];
+		Can[] cans = canList.toArray(new Can[canList.size()]);
+		int bestIndex = -1;
+		for (int i = 0; i < cans.length; i++) {
+			Can curCan = cans[i];
+			canPos[i] = usPos.pointAt(curCan.getDistance(), curCan.getAngle());
+			if (bestIndex == -1
+					|| curCan.getCount() > cans[bestIndex].getCount()) {
+				bestIndex = i;
 			}
 		}
-		System.out.println("BestCan:" + bestCan);
 
-		Point canPoint = bestCan.getPos();
-		System.out.println("CanPos:" + canPoint);
+		Point canPoint = canPos[bestIndex];
+		float absCanAngle = canPoint.getAngleBetween(new Point(1, 0), true);
+		Point targetPoint = canPoint.pointAt(Main.candiam / 2 + Main.grabberlen
+				/ 2, absCanAngle);
+		if (!isValidPoint(targetPoint)) {
+			System.out.println("Invalid target");
+			return false;
+		}
+
+		if (canTravel(botPos, targetPoint, canPos)) {
+			System.out.println("Direct way");
+
+			float angle = botPos.getAngleBetween(targetPoint, true);
+			float distance = botPos.getDistance(targetPoint);
+
+			rotate(angle);
+			travel(10 * distance);
+		} else {
+			System.out.println("No direct way");
+
+			Point t1 = new Point(targetPoint.getX(), botPos.getY());
+			Point t2 = new Point(botPos.getX(), targetPoint.getY());
+
+			if (canTravel(botPos, t1, canPos)
+					&& canTravel(t1, targetPoint, canPos)) {
+				float angle = botPos.getAngleBetween(t1, true);
+				float distance = botPos.getDistance(t1);
+
+				rotate(angle);
+				travel(10 * distance);
+
+				angle = t1.getAngleBetween(targetPoint, true);
+				distance = t1.getDistance(targetPoint);
+
+				if (targetPoint.getX() < t1.getX()) {
+					System.out.println("tarX < t1X");
+				} else {
+					System.out.println("tarX >= t1X");
+				}
+
+				rotate(angle);
+				travel(10 * distance);
+			} else if (canTravel(botPos, t2, canPos)
+					&& canTravel(t2, targetPoint, canPos)) {
+				float angle = botPos.getAngleBetween(t2, true);
+				float distance = botPos.getDistance(t2);
+
+				rotate(angle);
+				travel(10 * distance);
+
+				if (targetPoint.getY() < t2.getY()) {
+					System.out.println("tarY < t1Y");
+				} else {
+					System.out.println("tarY >= t1Y");
+				}
+
+				angle = t2.getAngleBetween(targetPoint, true);
+				distance = t2.getDistance(targetPoint);
+
+				rotate(angle);
+				travel(10 * distance);
+			} else {
+				System.out.println("Uups");
+				System.out.println("t1:" + t1);
+				System.out.println("t2:" + t2);
+				
+				return false;
+			}
+		}
 
 		return true;
 	}
@@ -527,6 +617,7 @@ public class ColaBot {
 		// grabMotor.rotate(getUsPosition().getDirectionTo(canCoord));
 		return true;
 	}
+
 	/**
 	 * 
 	 * @param startAngle
@@ -579,7 +670,7 @@ public class ColaBot {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * 
 	 * @param startAngle
