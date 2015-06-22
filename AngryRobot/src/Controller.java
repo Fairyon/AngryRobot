@@ -201,8 +201,8 @@ public class Controller extends Thread {
 	public void run() {
 		robot.init();
 		robot.findCan();
+		
 		// robot.addUsSensorPortListener(usListener);
-		// robot.test();
 
 		/*
 		 * while (!isInterrupted()) { if (findCan()) { Sound.beepSequenceUp();

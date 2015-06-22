@@ -49,7 +49,7 @@ public class Point {
 	}
 	
 	public Point(Polar pol) {
-		this.moveAt(pol.getDistance(), pol.getAngle());
+		this.moveTo(pol.getDistance(), pol.getAngle());
 	}
 	
 

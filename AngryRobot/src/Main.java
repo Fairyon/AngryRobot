@@ -9,7 +9,7 @@ public class Main {
 
 	protected final static int mapHeight = 114; // every cm
 	protected final static int mapWidth = 240; // every cm
-	protected final static int candiam = 7; // size in cm
+	protected final static int candiam = 10; // size in cm
 	protected final static int grabberlen = 13; // size in cm
 	protected final static int distToEyes = 14; // distance in cm
 	protected final static int angleToEyes = 20; // angle in degree
@@ -26,7 +26,7 @@ public class Main {
 	protected final static int rotationSpeed = 200;
 
 	public static void main(String[] args) {
-		Button.waitForAnyPress();
+		//Button.waitForAnyPress();
 
 		Controller c = new Controller();
 		c.start();

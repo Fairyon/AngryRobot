@@ -471,7 +471,10 @@ public class ColaBot {
 
 	protected boolean findCan() {
 		//final int recheckDistance = 15; // cm
-		Polar canPolar = lookForCan(0, 90, 4);
+		ArrayList<Can> cans = lookForCans(0, 90, 8);
+		for(Can can : cans){
+			System.out.println(can);
+		}
 		// Total distance between robot and can
 		/*if (canPolar == null)
 			return false; // TODO fahren zu anderen position
@@ -513,84 +516,90 @@ public class ColaBot {
 	 * @param endAngle
 	 * @return Polar with distance and angle to the next can relative to robot
 	 */
-	protected Polar lookForCan(int startAngle, int endAngle, int count) {
+	protected ArrayList<Can> lookForCans(int startAngle, int endAngle, int count) {
 		grabMotor.setSpeed(50);
 		int angleBackup = grabMotor.getTachoCount();
 		int angle, newAngle;
-		int newRange;
+		int range, newRange;
 		int delta;
-		int range = getUsDistance();
+		CanAdder helpThread = null;
 		Can tmpCan = new Can();
 		ArrayList<Can> cans = new ArrayList<Can>();
-		boolean canAdded;
 		grabMotor.rotateTo(startAngle); // Rotate to start position
 		angle = grabMotor.getTachoCount();
-		int rotation = 0;
-		while (rotation < count) {
-			grabMotor.rotateTo((rotation % 2 == 0) ? endAngle : startAngle, true);
+		range = usSensor.getDistance();
+		boolean rotation = false; //false - from start, true - back
+		while (count-- > 0) {
+			grabMotor.rotateTo(rotation ? startAngle : endAngle, true);
 			while (grabMotor.isMoving()) {
-				newRange = getUsDistance();
 				newAngle = grabMotor.getTachoCount();
+				newRange = usSensor.getDistance();
 				delta = range - newRange;
-				if (delta > Main.minimalDelta && newRange < 200) { // if new angle at object
-					Sound.beep();
-					tmpCan.changePol(newRange, newAngle);
-					canAdded = false;
-					for (Can can : cans) { // check if can exists
-						canAdded = can.addCan(tmpCan);
-						if (canAdded) {
-							break;
-						}
-					}
-					if (!canAdded) { // if not, append them to the list
-						cans.add(tmpCan.clone());
-					}
-				} else if (delta < -Main.minimalDelta && range < 200) { // if old angle at object
-					Sound.twoBeeps();
-					tmpCan.changePol(range, angle);
-					canAdded = false;
-					for (Can can : cans) { // check if can exists
-						canAdded = can.addCan(tmpCan);
-						if (canAdded) {
-							break;
-						}
-					}
-					if (!canAdded) { // if not, append them to the list
-						cans.add(tmpCan.clone());
-					}
+				if ((!rotation) && (delta > Main.minimalDelta) && (newRange < 200)) { // if new angle at object
+					helpThread=new CanAdder(cans, tmpCan, newRange, newAngle);
+					helpThread.start();
+				} else if (rotation && (delta < -Main.minimalDelta) && (range < 200)) { // if old angle at object
+					helpThread=new CanAdder(cans, tmpCan, range, angle);
+					helpThread.start();
 				}
 				range = newRange;
 				angle = newAngle;
 			}
-			rotation++;
+			rotation=!rotation;
 		}
 		grabMotor.rotateTo(angleBackup, true); // rotate to the backup position
+		
+		try {
+			if(helpThread!=null) helpThread.join();
+		} catch (InterruptedException e) { 
+			return null;
+		}
 		if (cans.size() > 0) {
-			int bestCount = 0;
-			for (Can can : cans) {
-				System.out.println(can);
-				if (can.getCount() > bestCount) {
-					bestCount = can.getCount();
-					tmpCan = can;
-				}
-			}
-			int bestRange = (int) tmpCan.getPol().getDistance();
-			float bestAngle = tmpCan.getPol().getAngle();
-			return new Polar(getDistToObject(bestRange, bestAngle), bestAngle
-					+ getAngle());
+			return cans;
 		}
 		return null;
 	}
+	
+	private class CanAdder extends Thread{
+		
+		ArrayList<Can> cans; 
+		Can tmpCan; 
+		int range; 
+		int angle;
+		
+		public CanAdder(ArrayList<Can> cans, Can tmpCan, int range, int angle){
+			this.cans = cans;
+			this.tmpCan = tmpCan;
+			this.range = range;
+			this.angle = angle;
+		}
+		
+		public void run(){
+			synchronized(cans){
+				tmpCan.changePol(range, angle);
+				boolean canAdded = false;
+				for (Can can : cans) { // check if can exists
+					canAdded = can.addCan(tmpCan);
+					if (canAdded) {
+						break;
+					}
+				}
+				if (!canAdded) { // if not, append them to the list
+					cans.add(tmpCan.clone());
+				}
+			}
+		}
+	}
 
 	protected void test() {
-		pilot.setRotateSpeed(100);
-		pilot.setTravelSpeed(150);
-		// travel(1000);
-		rotate(90);
-		// travel(-1000);
-		rotate(90);
-		rotate(90);
-		rotate(90);
+		grabMotor.setSpeed(50);
+		grabMotor.lookLeft();
+		System.out.println(grabMotor.getTachoCount());
+		grabMotor.lookAhead();
+		System.out.println(grabMotor.getTachoCount());
+		grabMotor.lookRight();
+		System.out.println(grabMotor.getTachoCount());
+		grabMotor.lookAhead();
 		// Button.waitForAnyPress();
 		/*
 		 * while(!canTouchSensor.isPressed()); System.out.println("Pressed!!!");
