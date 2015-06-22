@@ -2,13 +2,14 @@ public class Polar {
 
 	private int distance;
 	private float angle;
-	
-	static public Polar getMean(Polar p1, Polar p2){
-		return new Polar((p1.distance+p2.distance)/2, (p1.angle+p2.angle)/2);
+
+	static public Polar getMean(Polar p1, Polar p2) {
+		return new Polar((p1.distance + p2.distance) / 2,
+				(p1.angle + p2.angle) / 2);
 	}
 
 	/**
-	 * Create a polar at distance=0; angöe=0;
+	 * Create a polar at distance=0; angle=0;
 	 */
 	public Polar() {
 	}
@@ -17,15 +18,15 @@ public class Polar {
 		this.distance = distance;
 		this.angle = angle;
 	}
-	
+
 	public Polar(Polar pol) {
 		this.distance = pol.distance;
 		this.angle = pol.angle;
 	}
-	
-	public Point toVector(){
+
+	public Point toVector() {
 		return null;
-		
+
 	}
 
 	public float getDistance() {
@@ -35,8 +36,8 @@ public class Polar {
 	public float getAngle() {
 		return this.angle;
 	}
-	
-	public void moveTo(int distance, float angle){
+
+	public void moveTo(int distance, float angle) {
 		this.distance = distance;
 		this.angle = angle;
 	}
@@ -48,12 +49,12 @@ public class Polar {
 	protected void setAngle(float angle) {
 		this.angle = angle;
 	}
-	
-	public Polar clone(){
+
+	public Polar clone() {
 		return new Polar(this);
 	}
-	
-	public String toString(){
-		return ((int) angle)+" deg, "+distance+" cm";
+
+	public String toString() {
+		return ((int) angle) + " deg, " + distance + " cm";
 	}
 }
