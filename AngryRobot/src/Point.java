@@ -193,9 +193,11 @@ public class Point {
 	}
 
 	public float getAngleTo(Point other, boolean degrees) {
-		double scalar = (this.x - other.x) * (this.x - other.x);
-		double norms = getLength(this.x - other.x, this.y - other.y)
-				* getLength(this.x - other.x, 0);
+		float xDiff = this.x - other.x;
+		
+		double scalar = xDiff * xDiff;
+		double norms = getLength(xDiff, this.y - other.y)
+				* getLength(xDiff, 0);
 		double cos = scalar / norms;
 		double angle = Math.acos(cos);
 
