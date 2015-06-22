@@ -14,6 +14,8 @@ public class Main {
 	protected final static int distToEyes = 14; // distance in cm
 	protected final static int angleToEyes = 20; // angle in degree
 
+	protected final static int robotWidth = 14;
+
 	protected final static MotorPort leftMotorPort = MotorPort.C;
 	protected final static MotorPort rightMotorPort = MotorPort.B;
 	protected final static MotorPort grabMotorPort = MotorPort.A;
@@ -26,7 +28,7 @@ public class Main {
 	protected final static int rotationSpeed = 200;
 
 	public static void main(String[] args) {
-		//Button.waitForAnyPress();
+		Button.waitForAnyPress();
 
 		Controller c = new Controller();
 		c.start();

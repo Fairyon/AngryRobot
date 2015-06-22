@@ -58,10 +58,10 @@ public class Can {
 	
 	public boolean equals(Can can){
 		//System.out.println(this.pos+", "+can.pos);
-		return 	can.pos.getX()-Main.candiam/2 <= this.pos.getX() && 
-						can.pos.getX()+Main.candiam/2 >= this.pos.getX() && 
-						can.pos.getY()-Main.candiam/2 <= this.pos.getY() && 
-						can.pos.getY()+Main.candiam/2 >= this.pos.getY();
+		return 	can.pos.getX()-Main.candiam <= this.pos.getX() && 
+						can.pos.getX()+Main.candiam >= this.pos.getX() && 
+						can.pos.getY()-Main.candiam <= this.pos.getY() && 
+						can.pos.getY()+Main.candiam >= this.pos.getY();
 	}
 	
 	public String toString(){

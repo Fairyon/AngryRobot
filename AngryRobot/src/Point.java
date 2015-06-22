@@ -1,7 +1,7 @@
 public class Point {
-	
-	static public Point getMean(Point p1, Point p2){
-		return new Point((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+
+	static public Point getMean(Point p1, Point p2) {
+		return new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
 	}
 
 	static public Point getDirectionVector(float distance, float angle) {
@@ -42,16 +42,15 @@ public class Point {
 		this.x = (float) x;
 		this.y = (float) y;
 	}
-	
+
 	public Point(Point pos) {
 		this.x = pos.x;
 		this.y = pos.y;
 	}
-	
+
 	public Point(Polar pol) {
 		this.moveTo(pol.getDistance(), pol.getAngle());
 	}
-	
 
 	public float getX() {
 		return x;
@@ -138,7 +137,7 @@ public class Point {
 	 */
 	@Override
 	public String toString() {
-		return "(" + ((int)this.x) + ", " + ((int)this.y) + ")";
+		return "(" + ((int) this.x) + ", " + ((int) this.y) + ")";
 	}
 
 	/**
@@ -203,5 +202,9 @@ public class Point {
 		if (degrees)
 			return (float) Math.toDegrees(angle);
 		return (float) angle;
+	}
+
+	public Point scalePoint(float scalar) {
+		return new Point(this.x * scalar, this.y * scalar);
 	}
 }

@@ -475,48 +475,51 @@ public class ColaBot {
 		}
 	}
 
-	protected boolean findCan() {
-		// final int recheckDistance = 15; // cm
-		ArrayList<Can> cans = lookForCans(0, 90, 8);
-		for(Can can : cans){
-			System.out.println(can);
-		}
-		// Total distance between robot and can
-		/*
-		 * if (canPolar == null) return false; // TODO fahren zu anderen
-		 * position
-		 * 
-		 * boolean canFound = false; rotateTo(canPolar.getAngle(), false); while
-		 * (canPolar.getDistance() > recheckDistance * 2) {
-		 * travel(recheckDistance * 10); canPolar = lookForCan(-45, 45, 2); if
-		 * (canPolar == null) return false; rotateTo(canPolar.getAngle(),
-		 * false); } canPolar = lookForCan(-45, 45, 2); if (canPolar == null)
-		 * return false; rotateTo(canPolar.getAngle() - 15, false);
-		 * System.out.println("fertig");
-		 */
+	private boolean canTravel(Point target, Can[] cans) {
+		if (!isValidPoint(target))
+			return false;
 
-		// We are now in front of the can
-		/*Point canPoint = getPosition().pointAt(canPolar.getDistance(),
-				canPolar.getAngle());
-		System.out.println("Pos:" + getPosition());
-		System.out.println("CanPolar:" + canPolar);
+		Point position = getPosition();
+		Point direction = new Point(target.getX() - position.getX(),
+				target.getY() - position.getY());
+		float length = direction.getLength();
+		Point norm = direction.scalePoint(1 / length);
+
+		for (float t = 0; t <= length; t += 1) {
+			Point cur = position.addTo(norm.scalePoint(t));
+
+			for (int i = 0; i < cans.length; i++) {
+				Point canPos = cans[i].getPos();
+				float dist = canPos.getDistance(cur);
+
+				if (dist <= Main.robotWidth / 2 + Main.candiam)
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	protected boolean findCan() {
+		Point botPos = getUsPosition();
+		System.out.println("Pos:" + botPos);
+
+		// final int rechteckDistance = 15; // cm
+		ArrayList<Can> cans = lookForCans(0, 90, 4);
+		if (cans == null)
+			return false;
+
+		Can bestCan = cans.get(0);
+		for (int i = 1; i < cans.size(); i++) {
+			if (cans.get(i).getCount() > bestCan.getCount()) {
+				bestCan = cans.get(i);
+			}
+		}
+		System.out.println("BestCan:" + bestCan);
+
+		Point canPoint = bestCan.getPos();
 		System.out.println("CanPos:" + canPoint);
 
-		float absCanAngle = canPoint.getAngleBetween(new Point(), true);
-		System.out.println("AbsCanAngle:" + absCanAngle);
-
-		Point targetPoint = canPoint.pointAt(canPolar.getDistance(),
-				absCanAngle);
-		System.out.println("tarPos:" + targetPoint);*/
-
-		/*
-		 * while (pilot.isMoving()) { if (canTouchSensor.isPressed()) {
-		 * System.out.println("touched"); canFound = true; break; } } if
-		 * (!canFound) findCan(); else { pilot.stop(); float homeAngle =
-		 * curpos.getAngleTo(homePosition, true) + 180;
-		 * System.out.println("homeAngle" + homeAngle); rotateTo(homeAngle,
-		 * true); travel(curpos.getDistance(homePosition) * 10); }
-		 */
 		return true;
 	}
 
@@ -524,7 +527,6 @@ public class ColaBot {
 		// grabMotor.rotate(getUsPosition().getDirectionTo(canCoord));
 		return true;
 	}
-
 	/**
 	 * 
 	 * @param startAngle
@@ -543,30 +545,33 @@ public class ColaBot {
 		grabMotor.rotateTo(startAngle); // Rotate to start position
 		angle = grabMotor.getTachoCount();
 		range = usSensor.getDistance();
-		boolean rotation = false; //false - from start, true - back
+		boolean rotation = false; // false - from start, true - back
 		while (count-- > 0) {
 			grabMotor.rotateTo(rotation ? startAngle : endAngle, true);
 			while (grabMotor.isMoving()) {
 				newAngle = grabMotor.getTachoCount();
 				newRange = usSensor.getDistance();
 				delta = range - newRange;
-				if ((!rotation) && (delta > Main.minimalDelta) && (newRange < 200)) { // if new angle at object
-					helpThread=new CanAdder(cans, tmpCan, newRange, newAngle);
+				if ((!rotation) && (delta > Main.minimalDelta)
+						&& (newRange < 200)) { // if new angle at object
+					helpThread = new CanAdder(cans, tmpCan, newRange, newAngle);
 					helpThread.start();
-				} else if (rotation && (delta < -Main.minimalDelta) && (range < 200)) { // if old angle at object
-					helpThread=new CanAdder(cans, tmpCan, range, angle);
+				} else if (rotation && (delta < -Main.minimalDelta)
+						&& (range < 200)) { // if old angle at object
+					helpThread = new CanAdder(cans, tmpCan, range, angle);
 					helpThread.start();
 				}
 				range = newRange;
 				angle = newAngle;
 			}
-			rotation=!rotation;
+			rotation = !rotation;
 		}
 		grabMotor.rotateTo(angleBackup, true); // rotate to the backup position
-		
+
 		try {
-			if(helpThread!=null) helpThread.join();
-		} catch (InterruptedException e) { 
+			if (helpThread != null)
+				helpThread.join();
+		} catch (InterruptedException e) {
 			return null;
 		}
 		if (cans.size() > 0) {
@@ -575,22 +580,52 @@ public class ColaBot {
 		return null;
 	}
 	
-	private class CanAdder extends Thread{
-		
-		ArrayList<Can> cans; 
-		Can tmpCan; 
-		int range; 
+	/**
+	 * 
+	 * @param startAngle
+	 * @param endAngle
+	 * @return Polar with distance and angle to the next can relative to robot
+	 */
+	protected Polar lookForCan(int startAngle, int endAngle, int count) {
+		ArrayList<Can> cans = lookForCans(startAngle, endAngle, count);
+		if (cans.size() > 0) {
+			int bestIndex = -1;
+			int bestCount = 0;
+			for (int i = 0; i < cans.size(); i++) {
+				Can can = cans.get(i);
+
+				System.out.println(can);
+				if (can.getCount() > bestCount) {
+					bestCount = can.getCount();
+					bestIndex = i;
+				}
+			}
+
+			Can bestCan = cans.get(bestIndex);
+			int bestRange = (int) bestCan.getDistance();
+			float bestAngle = bestCan.getAngle();
+			int distToObject = getDistToObject(bestRange, bestAngle);
+
+			return new Polar(distToObject, bestAngle + getAngle());
+		}
+		return null;
+	}
+
+	private class CanAdder extends Thread {
+		ArrayList<Can> cans;
+		Can tmpCan;
+		int range;
 		int angle;
-		
-		public CanAdder(ArrayList<Can> cans, Can tmpCan, int range, int angle){
+
+		public CanAdder(ArrayList<Can> cans, Can tmpCan, int range, int angle) {
 			this.cans = cans;
 			this.tmpCan = tmpCan;
 			this.range = range;
 			this.angle = angle;
 		}
-		
-		public void run(){
-			synchronized(cans){
+
+		public void run() {
+			synchronized (cans) {
 				tmpCan.changePol(range, angle);
 				boolean canAdded = false;
 				for (Can can : cans) { // check if can exists
