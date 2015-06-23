@@ -1,3 +1,6 @@
+import lejos.nxt.Button;
+import lejos.nxt.Sound;
+
 public class Controller extends Thread {
 	private static final int distanceDelta = 10;
 
@@ -73,13 +76,15 @@ public class Controller extends Thread {
 		System.out.println("angle " + robotAngle);
 		System.out.println();
 
+		float initialAngle = robot.getAngle();
+		
 		int usSteps = 2;
 		float minAngle = robotAngle;
 		int minDistance = distance;
 
 		// turns the sensor to the left
 		for (int i = 0; i <= 90; i += usSteps) {
-			robot.rotateUsTo(i);
+			robot.usRotateTo(i);
 
 			// TODO Remove or reduce
 			Thread.sleep(50);
@@ -106,7 +111,7 @@ public class Controller extends Thread {
 		System.out.println();
 
 		for (int i = usSteps; i <= 90; i += usSteps) {
-			robot.rotateUsTo(-i);
+			robot.usRotateTo(-i);
 
 			// TODO Remove or reduce
 			Thread.sleep(50);
@@ -130,7 +135,7 @@ public class Controller extends Thread {
 		}
 
 		// reset ultrasonic sensor rotation
-		robot.resetUsRotation();
+		robot.usRotateTo(initialAngle);
 
 		System.out.println();
 		System.out.println("Leaving turnToObject");
@@ -200,8 +205,31 @@ public class Controller extends Thread {
 
 	public void run() {
 		robot.init();
+
+		//robot.usRotateTo(90);
+		//robot.usRotateTo(0);
+		//robot.usRotateTo(-90);
+		//robot.usRotateTo(0);
+		
 		robot.findCan();
 		
+		/*
+		robot.travel(10 * 10, true);
+		robot.raisingCrane();
+		if (robot.isTouchSensorPressed()) {
+			Sound.beep();
+		}
+		Button.waitForAnyPress();
+
+		robot.rotate(180);
+		Sound.beep();
+		Button.waitForAnyPress();
+
+		robot.loweringCrane();
+		Sound.beep();
+		Button.waitForAnyPress();
+		*/
+
 		// robot.addUsSensorPortListener(usListener);
 
 		/*

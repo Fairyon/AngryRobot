@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 
+import javax.microedition.lcdui.Graphics;
+
 import lejos.nxt.*;
 import lejos.robotics.*;
 import lejos.robotics.navigation.*;
@@ -18,10 +20,10 @@ public class ColaBot {
 
 	private static final Point homePosition = new Point(20, 20);
 
-	private final DifferentialPilot pilot;
+	private final ColaDifferentialPilot pilot;
 	private final RegulatedMotor leftMotor;
 	private final RegulatedMotor rightMotor;
-	private final GrabMotor grabMotor;
+	private final GrabMotor craneMotor;
 	private final LightSensor lightSensor;
 	private final TouchSensor canTouchSensor;
 	private final ColaUltrasonicSensor usSensor;
@@ -34,11 +36,11 @@ public class ColaBot {
 	public ColaBot() {
 		this.leftMotor = new NXTRegulatedMotor(Main.leftMotorPort);
 		this.rightMotor = new NXTRegulatedMotor(Main.rightMotorPort);
-		this.grabMotor = new GrabMotor(Main.grabMotorPort);
+		this.craneMotor = new GrabMotor(Main.grabMotorPort);
 		this.lightSensor = new LightSensor(Main.lightSensorPort);
 		this.canTouchSensor = new TouchSensor(Main.canTouchSensorPort);
 		this.usSensor = new ColaUltrasonicSensor(Main.usSensorPort);
-		this.pilot = new ColaDifferentialPilot(56, 142 - 26, leftMotor,
+		this.pilot = new ColaDifferentialPilot(56, 138 - 26, leftMotor,
 				rightMotor);
 
 		curpos = new Point(40, 40);
@@ -56,7 +58,7 @@ public class ColaBot {
 
 	public void stop() {
 		pilot.stop();
-		grabMotor.stop();
+		loweringCrane();
 		lightSensor.setFloodlight(false);
 		usSensor.off();
 	}
@@ -68,24 +70,44 @@ public class ColaBot {
 		usSensor.addSensorPortListener(listener);
 	}
 
-	/**
-	 * Resets the position of the ultrasonic sensor
-	 */
-	public void resetUsRotation() {
-		grabMotor.lookAhead();
+	public void loweringCrane() {
+		craneMotor.lookAhead();
 	}
 
-	/**
-	 * Rotates the ultrasonic sensor to the specified angle
-	 * 
-	 * @param angle
-	 *            Angle to rotate the ultrasonic sensor
-	 */
-	public void rotateUsTo(int angle) {
-		if (Math.abs(angle) > 90)
-			throw new IllegalArgumentException("invalid angle " + angle);
+	public void raisingCrane() {
+		craneMotor.setAcceleration(12000);
+		craneMotor.setSpeed(300);
+		craneMotor.rotateTo(-45);
+		craneMotor.setSpeed(50);
+		craneMotor.setAcceleration(6000);
+	}
 
-		grabMotor.rotateTo(angle);
+	public void usRotate(float angle, boolean immediateReturn) {
+		pilot.usRotate(angle, immediateReturn);
+	}
+
+	public void usRotate(float angle) {
+		craneMotor.rotate(-5);
+		
+		usRotate(angle, false);
+		
+		loweringCrane();
+	}
+
+	public void usRotateTo(float angle) {
+		craneMotor.rotate(-5);
+		
+		usRotateTo(angle, false);
+		
+		loweringCrane();
+	}
+
+	public void usRotateTo(float angle, boolean immediateReturn) {
+		float relAngle = angle - getAngle();
+		
+		System.out.println("abs:" + angle + " rel:" + relAngle);
+		
+		pilot.usRotate(relAngle, immediateReturn);
 	}
 
 	public int getUsDistance() {
@@ -331,23 +353,22 @@ public class ColaBot {
 		}
 	}
 
-	protected float getUsTachoAngle() {
-		return grabMotor.getTachoCount();
-	}
-
-	protected float getUSAngle() {
-		float angle = getAngle() + getUsTachoAngle();
-		if (angle < -180)
-			angle += 360;
-		else if (angle > 180)
-			angle -= 360;
-		return angle;
+	protected float getCraneTachoCount() {
+		return craneMotor.getTachoCount();
 	}
 
 	protected float getAngle() {
 		if (isMoving) {
 			Move event = pilot.getMovement();
 			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
+				float angle = curangle + event.getAngleTurned();
+				if (angle < -180)
+					angle += 360;
+				else if (angle > 180)
+					angle -= 360;
+				return angle;
+			} else if(event.getMoveType().equals(Move.MoveType.ARC)) {
+				// TODO position ändern
 				float angle = curangle + event.getAngleTurned();
 				if (angle < -180)
 					angle += 360;
@@ -465,12 +486,15 @@ public class ColaBot {
 
 		@Override
 		public void moveStopped(Move event, MoveProvider mp) {
-			if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
-				curangle += event.getAngleTurned() * rotationFactor;
-			} else {
-				curpos.moveAt(event.getDistanceTraveled() * distanceFactor,
-						curangle);
-			}
+				if (event.getMoveType().equals(Move.MoveType.ROTATE)) {
+					curangle += event.getAngleTurned() * rotationFactor;
+				} else if (event.getMoveType().equals(Move.MoveType.ARC)) {
+					curangle += event.getAngleTurned() * rotationFactor;
+					//TODO position andern
+				} else {
+					curpos.moveAt(event.getDistanceTraveled() * distanceFactor,
+							curangle);
+				}
 			isMoving = false;
 		}
 	}
@@ -482,7 +506,7 @@ public class ColaBot {
 		System.out.println("target:" + target);
 		System.out.println("cans:" + cans.length);
 		System.out.println();
-		
+
 		if (!isValidPoint(target))
 			return false;
 
@@ -508,7 +532,7 @@ public class ColaBot {
 					System.out.println("leave canTravel");
 					System.out.println("return false");
 					System.out.println();
-					
+
 					return false;
 				}
 			}
@@ -517,7 +541,7 @@ public class ColaBot {
 		System.out.println("leave canTravel");
 		System.out.println("return true");
 		System.out.println();
-		
+
 		return true;
 	}
 
@@ -528,16 +552,25 @@ public class ColaBot {
 		if (canList == null)
 			return false;
 
+		System.out.println();
 		Point[] canPos = new Point[canList.size()];
 		Can[] cans = canList.toArray(new Can[canList.size()]);
 		int bestIndex = -1;
 		for (int i = 0; i < cans.length; i++) {
+			System.out.println("Can " + (i+1));
+			System.out.println("angle: " + cans[i].getAngle());
+			System.out.println("distance: " + cans[i].getDistance());
+			System.out.println("count: " + cans[i].getCount());
+			
 			Can curCan = cans[i];
 			canPos[i] = usPos.pointAt(curCan.getDistance(), curCan.getAngle());
 			if (bestIndex == -1
 					|| curCan.getCount() > cans[bestIndex].getCount()) {
 				bestIndex = i;
 			}
+			
+			System.out.println("abs: " + canPos[i]);
+			System.out.println();
 		}
 
 		Point canPoint = canPos[bestIndex];
@@ -549,66 +582,52 @@ public class ColaBot {
 			return false;
 		}
 
-		if (canTravel(botPos, targetPoint, canPos)) {
-			System.out.println("Direct way");
-
-			float angle = botPos.getAngleBetween(targetPoint, true);
-			float distance = botPos.getDistance(targetPoint);
-
-			rotate(angle);
-			travel(10 * distance);
-		} else {
-			System.out.println("No direct way");
-
-			Point t1 = new Point(targetPoint.getX(), botPos.getY());
-			Point t2 = new Point(botPos.getX(), targetPoint.getY());
-
-			if (canTravel(botPos, t1, canPos)
-					&& canTravel(t1, targetPoint, canPos)) {
-				float angle = botPos.getAngleBetween(t1, true);
-				float distance = botPos.getDistance(t1);
-
-				rotate(angle);
-				travel(10 * distance);
-
-				angle = t1.getAngleBetween(targetPoint, true);
-				distance = t1.getDistance(targetPoint);
-
-				if (targetPoint.getX() < t1.getX()) {
-					System.out.println("tarX < t1X");
-				} else {
-					System.out.println("tarX >= t1X");
-				}
-
-				rotate(angle);
-				travel(10 * distance);
-			} else if (canTravel(botPos, t2, canPos)
-					&& canTravel(t2, targetPoint, canPos)) {
-				float angle = botPos.getAngleBetween(t2, true);
-				float distance = botPos.getDistance(t2);
-
-				rotate(angle);
-				travel(10 * distance);
-
-				if (targetPoint.getY() < t2.getY()) {
-					System.out.println("tarY < t1Y");
-				} else {
-					System.out.println("tarY >= t1Y");
-				}
-
-				angle = t2.getAngleBetween(targetPoint, true);
-				distance = t2.getDistance(targetPoint);
-
-				rotate(angle);
-				travel(10 * distance);
-			} else {
-				System.out.println("Uups");
-				System.out.println("t1:" + t1);
-				System.out.println("t2:" + t2);
-				
-				return false;
-			}
-		}
+		/*
+		 * if (canTravel(botPos, targetPoint, canPos)) {
+		 * System.out.println("Direct way");
+		 * 
+		 * float angle = botPos.getAngleBetween(targetPoint, true); float
+		 * distance = botPos.getDistance(targetPoint);
+		 * 
+		 * rotate(angle); travel(10 * distance); } else {
+		 * System.out.println("No direct way");
+		 * 
+		 * Point t1 = new Point(targetPoint.getX(), botPos.getY()); Point t2 =
+		 * new Point(botPos.getX(), targetPoint.getY());
+		 * 
+		 * if (canTravel(botPos, t1, canPos) && canTravel(t1, targetPoint,
+		 * canPos)) { float angle = botPos.getAngleBetween(t1, true); float
+		 * distance = botPos.getDistance(t1);
+		 * 
+		 * rotate(angle); travel(10 * distance);
+		 * 
+		 * angle = t1.getAngleBetween(targetPoint, true); distance =
+		 * t1.getDistance(targetPoint);
+		 * 
+		 * if (targetPoint.getX() < t1.getX()) {
+		 * System.out.println("tarX < t1X"); } else {
+		 * System.out.println("tarX >= t1X"); }
+		 * 
+		 * rotate(angle); travel(10 * distance); } else if (canTravel(botPos,
+		 * t2, canPos) && canTravel(t2, targetPoint, canPos)) { float angle =
+		 * botPos.getAngleBetween(t2, true); float distance =
+		 * botPos.getDistance(t2);
+		 * 
+		 * rotate(angle); travel(10 * distance);
+		 * 
+		 * if (targetPoint.getY() < t2.getY()) {
+		 * System.out.println("tarY < t1Y"); } else {
+		 * System.out.println("tarY >= t1Y"); }
+		 * 
+		 * angle = t2.getAngleBetween(targetPoint, true); distance =
+		 * t2.getDistance(targetPoint);
+		 * 
+		 * rotate(angle); travel(10 * distance); } else {
+		 * System.out.println("Uups"); System.out.println("t1:" + t1);
+		 * System.out.println("t2:" + t2);
+		 * 
+		 * return false; } }
+		 */
 
 		return true;
 	}
@@ -625,22 +644,32 @@ public class ColaBot {
 	 * @return Polar with distance and angle to the next can relative to robot
 	 */
 	protected ArrayList<Can> lookForCans(int startAngle, int endAngle, int count) {
-		grabMotor.setSpeed(50);
-		int angleBackup = grabMotor.getTachoCount();
-		int angle, newAngle;
+		// grabMotor.setSpeed(50);
+
+		System.out.println();
+		System.out.println("enter lookForCans");
+		System.out.println("startAngle: " + startAngle);
+		System.out.println("endAngle: " + endAngle);
+		System.out.println("count: " + count);
+		System.out.println();
+
+		float angleBackup = getAngle();
+		float angle, newAngle;
 		int range, newRange;
 		int delta;
 		CanAdder helpThread = null;
 		Can tmpCan = new Can();
 		ArrayList<Can> cans = new ArrayList<Can>();
-		grabMotor.rotateTo(startAngle); // Rotate to start position
-		angle = grabMotor.getTachoCount();
+
+		usRotateTo(startAngle);
+		angle = getAngle();
+
 		range = usSensor.getDistance();
 		boolean rotation = false; // false - from start, true - back
 		while (count-- > 0) {
-			grabMotor.rotateTo(rotation ? startAngle : endAngle, true);
-			while (grabMotor.isMoving()) {
-				newAngle = grabMotor.getTachoCount();
+			usRotateTo(rotation ? startAngle : endAngle, true);
+			while (pilot.isMoving()) {
+				newAngle = getAngle();
 				newRange = usSensor.getDistance();
 				delta = range - newRange;
 				if ((!rotation) && (delta > Main.minimalDelta)
@@ -657,7 +686,7 @@ public class ColaBot {
 			}
 			rotation = !rotation;
 		}
-		grabMotor.rotateTo(angleBackup, true); // rotate to the backup position
+		usRotateTo(angleBackup, true); // rotate to the backup position
 
 		try {
 			if (helpThread != null)
@@ -665,9 +694,12 @@ public class ColaBot {
 		} catch (InterruptedException e) {
 			return null;
 		}
+
+		System.out.println("can size: " + cans.size());
 		if (cans.size() > 0) {
 			return cans;
 		}
+
 		return null;
 	}
 
@@ -706,9 +738,9 @@ public class ColaBot {
 		ArrayList<Can> cans;
 		Can tmpCan;
 		int range;
-		int angle;
+		float angle;
 
-		public CanAdder(ArrayList<Can> cans, Can tmpCan, int range, int angle) {
+		public CanAdder(ArrayList<Can> cans, Can tmpCan, int range, float angle) {
 			this.cans = cans;
 			this.tmpCan = tmpCan;
 			this.range = range;

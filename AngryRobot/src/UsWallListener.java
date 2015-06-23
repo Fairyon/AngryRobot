@@ -22,7 +22,7 @@ public class UsWallListener implements SensorPortListener {
 
 	@Override
 	public void stateChanged(SensorPort source, int oldValue, int newValue) {
-		float usAngle = robot.getUsTachoAngle();
+		float usAngle = robot.getAngle();
 
 		if (usAngle == 0) {
 			float botAngle = robot.getAngle();

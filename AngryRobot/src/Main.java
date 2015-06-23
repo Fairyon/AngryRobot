@@ -11,8 +11,8 @@ public class Main {
 	protected final static int mapWidth = 240; // every cm
 	protected final static int candiam = 10; // size in cm
 	protected final static int grabberlen = 13; // size in cm
-	protected final static int distToEyes = 14; // distance in cm
-	protected final static int angleToEyes = 20; // angle in degree
+	protected final static int distToEyes = 5; // distance in cm
+	protected final static int angleToEyes = 90; // angle in degree
 
 	protected final static int robotWidth = 14;
 
