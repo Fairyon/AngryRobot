@@ -5,7 +5,7 @@ public class Main {
 	protected final static int minimalDelta = 6;
 
 	protected final static float craneNormSpeed = 75;
-	protected final static float craneCanSpeed = 250;
+	protected final static float craneCanSpeed = 300;
 	
 	protected final static int usLimit = 160; // limit for us in cm
 
@@ -13,8 +13,8 @@ public class Main {
 	protected final static int mapWidth = 240; // every cm
 	protected final static int candiam = 10; // size in cm
 	protected final static int craneLength = 17; // distance in cm
-	protected final static int distFromEyesToEdge = 19; // distance in cm
-	protected final static int distToEyes = 5; // distance in cm
+	protected final static int distFromEyesToEdge = 20; // distance in cm
+	protected final static int distToEyes = 8; // distance in cm
 	protected final static int angleToEyes = 90; // angle in degree
 
 	protected final static int robotWidth = 14;

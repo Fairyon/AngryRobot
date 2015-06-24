@@ -19,11 +19,11 @@ public class ColaDifferentialPilot extends DifferentialPilot {
 		this.setRotateSpeed(Main.rotationSpeed);
 	}
 
-	public void rotate(final double angle) {
+	public void rotate(double angle) {
 		rotate(angle, false);
 	}
 
-	public void rotate(final double angle, final boolean immediateReturn) {
+	public void rotate(double angle, boolean immediateReturn) {
 		super.rotate(angle * rotationFactor, immediateReturn);
 	}
 
@@ -31,7 +31,7 @@ public class ColaDifferentialPilot extends DifferentialPilot {
 		travel(distance, false);
 	}
 
-	public void travel(double distance, final boolean immediateReturn) {
+	public void travel(double distance, boolean immediateReturn) {
 		if(distance<0){
 			super.travel(distance * negtravelFactor, immediateReturn);
 		} else {

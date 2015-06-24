@@ -1,3 +1,4 @@
+import java.lang.annotation.ElementType;
 import java.util.ArrayList;
 
 import lejos.nxt.*;
@@ -93,7 +94,7 @@ public class ColaBot {
 	}
 	
 	public void lookAt (Point pos){
-		usRotateTo(getUsPosition().getAngleTo(pos, true)-getAngle(), false);
+		usRotateTo(getUsPosition().getAngleTo(pos, true), false);
 	}
 
 	public void usRotateTo(float angle) {
@@ -138,6 +139,10 @@ public class ColaBot {
 		Point r1 = curpos.getDirectionTo(usPos);
 		Point r2 = Point.getDirectionVector(usRange, usAngle);
 		return (int) r1.addTo(r2).getLength();
+	}
+	
+	public float getAbsCanAngle(float usDistance, float usAngle){
+		return (float) (usAngle+Math.atan(Main.distToEyes/usDistance));
 	}
 
 	private boolean isValidPoint(Point p) {
@@ -188,7 +193,7 @@ public class ColaBot {
 	}
 
 	public boolean travelTo(Point pos) {
-		return travelTo(curpos.getDistance(pos), curpos.getAngleTo(pos, true));
+		return travelTo(curpos.getDistance(pos), pos.getAngleBetween(new Point(1,0), true)+180-getAngle());
 	}
 
 	public boolean travelTo(float distance, float angle) {
@@ -402,10 +407,6 @@ public class ColaBot {
 		} else {
 			angle = curangle;
 		}
-		if (angle < -180)
-			angle += 360;
-		else if (angle > 180)
-			angle -= 360;
 		return angle;
 	}
 
@@ -546,42 +547,66 @@ public class ColaBot {
 		}
 	}
 	
-	private boolean liftCan(){
-		travel(3 * 10, true);
+	public void liftCan(){
 		craneMotor.up(true);
-		if (isTouchSensorPressed()) {
-			Sound.beep();
-			return true;
-		}
-		return false;
+	}
+	
+	private void setCanDown(){
+		craneMotor.down();
+		travel(-Main.candiam);
+		craneMotor.up(false);
+	}
+	
+	public void travelHome(){
+		travelTo(new Point(20,20));
 	}
 
 	protected Can findCan(int angle) {
+		pilot.setTravelSpeed(75);
 		float angleBackup = getAngle();
-		Point botPos = getPosition();
 		Point usPos = getUsPosition();
 		
 		Can can = lookForCan(angle, 3);
+		pilot.setTravelSpeed(150);
 		if (can == null)
 			return null;
 
 		Point absCanPos = usPos.pointAt(can.getDistance(), can.getAngle());
 
-		float absCanAngle = absCanPos.getAngleBetween(new Point(1, 0), true);
+		float absCanAngle = getAbsCanAngle(can.getDistance(), can.getAngle());
 
 		if (canTravel(absCanPos)) {
 			travelTo(can.getDistance()-Main.craneLength-5, absCanAngle-getAngle());
-			if(!isThereCan(absCanPos)){
+			
+			if(!isThereCan(absCanAngle)){
 				findCan(360);
 				//TODO better search for the can
 			} else {
 				craneMotor.down();
-				travel(Main.craneLength+5);
-				if(!liftCan()) findCan(360); //TODO better search for the can
-				//TODO come back home
+				travel(Main.craneLength+5, true);
+				boolean canFound = false;
+				while(pilot.isMoving()){
+					if (isTouchSensorPressed()) {
+						canFound=true;
+						pilot.stop();
+						Sound.beep();
+					}
+				}
+				if(!canFound){
+					findCan(360); //TODO better search for the can
+				} else {
+					liftCan();
+					travelHome();
+					craneMotor.down();
+					setCanDown();
+					
+					rotateTo(0);
+					//TODO find next Can
+					findCan(angle);
+				}
 			}
 		} else {
-			calibrate(0);
+			//calibrate(0);
 			rotateTo(angleBackup);
 			return findCan(angle);
 		}
@@ -589,12 +614,13 @@ public class ColaBot {
 		return can;
 	}
 
-	protected boolean isThereCan(Point canCoord) {
-		lookAt(canCoord);
-		usRotate(10);
-		usRotate(-20, true);
+	protected boolean isThereCan(float canAngle) {
+		rotateTo(canAngle);
+		usRotate(35);
+		usRotate(-50, true);
 		while(pilot.isMoving()){
 			if(usSensor.getDistance()<Main.distFromEyesToEdge+8){
+				usRotate(-25);
 				pilot.stop();
 				return true;
 			}
@@ -612,7 +638,7 @@ public class ColaBot {
 
 		float startAngle = getAngle();
 		float oldAngle, newAngle;
-		int range, newRange;
+		int oldRange, newRange;
 		int delta;
 		CanAdder helpThread = null;
 		Can tmpCan = new Can();
@@ -620,35 +646,38 @@ public class ColaBot {
 
 		oldAngle = getAngle();
 
-		range = usSensor.getDistance();
+		oldRange = usSensor.getDistance();
 		boolean rotation = false; // false - from start, true - back
+		int iter=0;
 		while (count-- > 0) {
 			usRotateTo(rotation ? startAngle : angle, true);
 			while (pilot.isMoving()) {
+				iter++;
 				newAngle = getAngle();
 				newRange = usSensor.getDistance();
-				delta = range - newRange;
+				delta = oldRange - newRange;
 				if ((!rotation) && (delta > Main.minimalDelta) && (newRange < 200)) {
 					// if new angle at object
 					helpThread = new CanAdder(cans, tmpCan, newRange, newAngle);
 					helpThread.start();
-				} else if (rotation && (delta < -Main.minimalDelta) && (range < 200)) {
+				} else if (rotation && (delta < -Main.minimalDelta) && (oldRange < 200)) {
 					// if old angle at object
-					helpThread = new CanAdder(cans, tmpCan, range, oldAngle);
+					helpThread = new CanAdder(cans, tmpCan, oldRange, oldAngle);
 					helpThread.start();
 				}
-				range = newRange;
+				oldRange = newRange;
 				oldAngle = newAngle;
 			}
 			rotation = !rotation;
 		}
+		System.out.println(iter);
 
 		try {
 			if (helpThread != null)
 				helpThread.join();
 		} catch (InterruptedException e) {
 			return null;
-		}
+		} 
 
 		// System.out.println("can size: " + cans.size());
 		if (cans.size() > 0) {
@@ -669,9 +698,14 @@ public class ColaBot {
 		if (cans == null)
 			return null;
 		if (cans.size() > 0) {
-			Can bestCan = null;
+			Can bestCan = cans.get(0);
+			int i=0;
 			for (Can can : cans) {
 				System.out.println(can);
+				if(i==0) {
+					i++;
+					continue;
+				}
 				if (can.getCount() > bestCan.getCount()) {
 					bestCan = can;
 				} else if (can.getCount() == bestCan.getCount()
@@ -679,8 +713,6 @@ public class ColaBot {
 					bestCan = can;
 				}
 			}
-			if (bestCan == null)
-				bestCan = cans.get(0);
 
 			return bestCan;
 		}

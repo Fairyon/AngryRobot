@@ -14,12 +14,19 @@ public class CraneMotor extends NXTRegulatedMotor {
 	}
 	
 	public void up(boolean withCan){
-		//setAcceleration(12000);
-		if(withCan) setSpeed(Main.craneCanSpeed);
-		rotateTo(-15, false);
-		if(withCan) setSpeed(Main.craneNormSpeed);
-		//setAcceleration(6000);
-		while(isMoving());
+		if(withCan){ 
+			//setAcceleration(12000);
+			setSpeed(Main.craneCanSpeed);
+			rotate(-45, true);
+			while(isMoving()){
+				if(isStalled()) stop();
+			}
+			setSpeed(Main.craneNormSpeed);
+			//setAcceleration(6000);
+		} else {
+			rotateTo(-15, false);
+			while(isMoving());
+		}
 	}
 
 }
