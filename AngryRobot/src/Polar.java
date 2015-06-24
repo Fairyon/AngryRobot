@@ -23,10 +23,10 @@ public class Polar {
 		this.distance = pol.distance;
 		this.angle = pol.angle;
 	}
-
-	public Point toVector() {
-		return null;
-
+	
+	public Polar(Point pos){
+		this.distance = (int) pos.getDistance(new Point(0,0));
+		this.angle = pos.getAngleBetween(new Point(1,0), true);
 	}
 
 	public float getDistance() {

@@ -48,6 +48,11 @@ public class Can {
 		this.pos.moveTo(distance, angle);
 	}
 	
+	public void changePos(Point pos){
+		this.pol = new Polar(pos);
+		this.pos.moveTo(pos);
+	}
+	
 	public boolean addCan(Can can){
 		if(!equals(can)) return false;
 		this.pol=Polar.getMean(this.pol, can.pol);

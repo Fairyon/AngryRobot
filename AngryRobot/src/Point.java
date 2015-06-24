@@ -131,6 +131,11 @@ public class Point {
 		this.x = (float) (distance * Math.cos(Math.toRadians(angle)));
 		this.y = (float) (distance * Math.sin(Math.toRadians(angle)));
 	}
+	
+	public void moveTo(Point pos) {
+		this.x = pos.x;
+		this.y = pos.y;
+	}
 
 	/**
 	 * Represent the Point2SD.Float as a String

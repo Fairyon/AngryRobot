@@ -5,7 +5,7 @@ import lejos.nxt.Sound;
 public class UsWallListener implements SensorPortListener {
 	private static final int wallTolerance = 10;
 
-	private static final int minWallDiff = wallTolerance + Main.grabberlen;
+	private static final int minWallDiff = wallTolerance;
 	private static final int minX = minWallDiff;
 	private static final int maxX = Main.mapWidth - minWallDiff;
 	private static final int minY = minWallDiff;

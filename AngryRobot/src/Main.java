@@ -4,13 +4,16 @@ public class Main {
 
 	protected final static int minimalDelta = 6;
 
-	protected final static float canRotFactor = 1.98f;
+	protected final static float craneNormSpeed = 75;
+	protected final static float craneCanSpeed = 250;
+	
 	protected final static int usLimit = 160; // limit for us in cm
 
 	protected final static int mapHeight = 114; // every cm
 	protected final static int mapWidth = 240; // every cm
 	protected final static int candiam = 10; // size in cm
-	protected final static int grabberlen = 13; // size in cm
+	protected final static int craneLength = 17; // distance in cm
+	protected final static int distFromEyesToEdge = 19; // distance in cm
 	protected final static int distToEyes = 5; // distance in cm
 	protected final static int angleToEyes = 90; // angle in degree
 
@@ -28,14 +31,15 @@ public class Main {
 	protected final static int rotationSpeed = 200;
 
 	public static void main(String[] args) {
-		Button.waitForAnyPress();
+		//Button.waitForAnyPress();
 
 		Controller c = new Controller();
 		c.start();
 
-		Button.waitForAnyPress();
 		c.stop();
 
+		Button.waitForAnyPress();
+		
 		System.exit(0);
 	}
 

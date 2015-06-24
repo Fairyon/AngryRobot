@@ -3,16 +3,19 @@ import lejos.robotics.navigation.DifferentialPilot;
 
 public class ColaDifferentialPilot extends DifferentialPilot {
 
-	private static double rotationFactor = 1.01;
-	private static double travelFactor = 1.037;
+	private static float rotationFactor = 1.05f;
+	private static float arcRotationFactor = 1.01f;
+	private static float arcnegRotationFactor = 1.025f;
+	private static float travelFactor = 1.037f;
+	private static float negtravelFactor = 1.030f;
 
-	private double trackWidth;
+	private double usRotateRadius;
 	
 	public ColaDifferentialPilot(double wheelDiameter, double trackWidth,
 			RegulatedMotor leftMotor, RegulatedMotor rightMotor) {
 		super(wheelDiameter, trackWidth, leftMotor, rightMotor);
 		
-		this.trackWidth = trackWidth;
+		this.usRotateRadius = trackWidth / 2;
 		this.setRotateSpeed(Main.rotationSpeed);
 	}
 
@@ -29,7 +32,11 @@ public class ColaDifferentialPilot extends DifferentialPilot {
 	}
 
 	public void travel(double distance, final boolean immediateReturn) {
-		super.travel(distance * travelFactor, immediateReturn);
+		if(distance<0){
+			super.travel(distance * negtravelFactor, immediateReturn);
+		} else {
+			super.travel(distance * travelFactor, immediateReturn);
+		}
 	}
 	
 	public void usRotate(final double angle) {
@@ -37,13 +44,14 @@ public class ColaDifferentialPilot extends DifferentialPilot {
 	}
 	
 	public void usRotate(final double angle, boolean immediateReturn) {
-		//double tmp = angle / 39;
-		
-		this.setAcceleration((int) (3 * getMaxTravelSpeed()));
-		this.arc(-trackWidth / 2, angle, immediateReturn);
-		this.setAcceleration((int) (4 * getMaxTravelSpeed()));
-		
-		
-		//this._left.rotate((int) (Math.PI * tmp * trackWidth / 2), immediateReturn);
+
+		//this.setAcceleration((int) (3 * getMaxTravelSpeed()));
+		if(angle<0){
+			this.arc(-usRotateRadius, angle * arcnegRotationFactor, immediateReturn);
+		} else {
+			this.arc(-usRotateRadius, angle * arcRotationFactor, immediateReturn);
+		}
+		//this.setAcceleration((int) (4 * getMaxTravelSpeed()));
+
 	}
 }
