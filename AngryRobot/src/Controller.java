@@ -12,9 +12,9 @@ public class Controller extends Thread {
 
 	public void run() {
 		robot.init();
-		robot.findCan(90);
+		robot.makeWork();
 		//robot.liftCan();
-		//robot.stop();
+		robot.stop();
 		
 		/*
 		robot.travel(10 * 10, true);

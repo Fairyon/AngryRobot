@@ -34,12 +34,12 @@ public class Main {
 		//Button.waitForAnyPress();
 
 		Controller c = new Controller();
+		c.setDaemon(true);
 		c.start();
 
-		c.stop();
+		//c.stop();
 
 		Button.waitForAnyPress();
-		
 		System.exit(0);
 	}
 
